@@ -244,7 +244,6 @@ def _price_for_row(rng: random.Random, row: dict, pricing_settings: dict) -> flo
 def sample_items_dataset_df(
     universe_df: pd.DataFrame,
     *,
-    seed: int,
     n_devices: int,
     n_accessories: int,
     n_spare_parts: int,
@@ -258,9 +257,6 @@ def sample_items_dataset_df(
     Parameters:
       universe_df
         Output of build_items_universe_df().
-
-      seed
-        Random seed for deterministic sampling and shuffling.
 
       n_devices / n_accessories / n_spare_parts
         How many rows to pick for each non-refill category.
@@ -277,7 +273,7 @@ def sample_items_dataset_df(
     Output columns:
       product_id, product_name, brand, category, gramm_g, unit_price
     """
-    rng = random.Random(int(seed))
+    rng = random.Random()
 
     n_devices = int(n_devices)
     n_accessories = int(n_accessories)
@@ -309,12 +305,12 @@ def sample_items_dataset_df(
         raise ValueError(f"Universe has {len(bulk_pool)} bulk REFILL rows, requested n_bulk_refills={n_bulk_refills}.")
 
     # Sample fixed categories (no replacement)
-    devices_pick = devices_pool.sample(n=n_devices, replace=False, random_state=seed) if n_devices else devices_pool.iloc[0:0]
-    accessories_pick = accessories_pool.sample(n=n_accessories, replace=False, random_state=seed + 1) if n_accessories else accessories_pool.iloc[0:0]
-    spare_pick = spare_pool.sample(n=n_spare_parts, replace=False, random_state=seed + 2) if n_spare_parts else spare_pool.iloc[0:0]
+    devices_pick = devices_pool.sample(n=n_devices, replace=False) if n_devices else devices_pool.iloc[0:0]
+    accessories_pick = accessories_pool.sample(n=n_accessories, replace=False) if n_accessories else accessories_pool.iloc[0:0]
+    spare_pick = spare_pool.sample(n=n_spare_parts, replace=False) if n_spare_parts else spare_pool.iloc[0:0]
 
     # Bulk pick: exactly N bulk refills
-    bulk_pick = bulk_pool.sample(n=n_bulk_refills, replace=False, random_state=seed + 100) if n_bulk_refills else bulk_pool.iloc[0:0]
+    bulk_pick = bulk_pool.sample(n=n_bulk_refills, replace=False) if n_bulk_refills else bulk_pool.iloc[0:0]
 
     # Regular refills: distribute across refill brands (business-like)
     refill_picks = []
@@ -332,8 +328,7 @@ def sample_items_dataset_df(
                 continue
             brand_pool = refills_pool[refills_pool["brand"] == brand]
             replace = qty > len(brand_pool)
-            brand_seed = seed + (abs(hash(brand)) % 10_000) + 10
-            refill_picks.append(brand_pool.sample(n=qty, replace=replace, random_state=brand_seed))
+            refill_picks.append(brand_pool.sample(n=qty, replace=replace))
 
     refills_pick = pd.concat(refill_picks, ignore_index=True) if refill_picks else refills_pool.iloc[0:0]
 

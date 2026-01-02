@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 import random
 
-
 def _month_start(d):
     return date(d.year, d.month, 1)
 
@@ -74,10 +73,6 @@ def generate_customer_sales_rows(
     p_refill_invoice: float = 1.0,
     p_accessory_invoice: float = 0.0,
     p_spare_part_invoice: float = 0.0,
-    p_return_invoice: float = 0.0,
-
-    seed: int | None = None,
-    rng: random.Random | None = None,
 
     # Optional behavior: if True -> no invoices on the day customer becomes lost
     stop_invoices_on_lost_day: bool = True,
@@ -102,8 +97,7 @@ def generate_customer_sales_rows(
     start_dt = _parse_iso_date(sales_start_date)
     end_dt = _parse_iso_date(sales_end_date)
 
-    if rng is None:
-        rng = random.Random(seed)
+    rng = random.Random()
 
     if start_dt > end_dt:
         raise ValueError("sales_start_date must be <= sales_end_date.")
@@ -159,9 +153,6 @@ def generate_customer_sales_rows(
             ymd = f"{day_dt.year:04d}{day_dt.month:02d}{day_dt.day:02d}"
             invoice_id = f"{customer_id}-{ymd}-{invoice_seq:06d}"
 
-            is_return = (rng.random() < float(p_return_invoice))
-            sign = -1 if is_return else 1
-
             # Device line?
             p_dev = _value_by_index(p_device_by_nth, devices_owned)
             include_device = (rng.random() < p_dev) and bool(device_product_ids)
@@ -201,7 +192,7 @@ def generate_customer_sales_rows(
                     "customer_id": customer_id,
                     "invoice_date": day_dt.isoformat(),  # 'YYYY-MM-DD'
                     "product_id": int(prod_id),
-                    "quantity": 1 * sign,
+                    "quantity": 1,
                     "revenue": 0.0,
                     "store_id": int(store_id),
                 })
@@ -226,60 +217,3 @@ def generate_customer_sales_rows(
         day_dt += timedelta(days=1)
 
     return rows
-
-
-if __name__ == "__main__":
-    CUSTOMER_SALES_SETTINGS = {
-        "customer_id": 1,
-        "sales_start_date": "2020-03-15",
-        "sales_end_date": "2025-12-31",
-
-        "device_product_ids": list(range(1, 6)),
-        "refill_product_ids": list(range(6, 81)),          # example
-        "accessory_product_ids": list(range(81, 91)),      # example
-        "spare_part_product_ids": list(range(91, 101)),    # example
-
-        "store_ids": list(range(101, 110)),
-
-        # DAILY purchase probability schedule by customer-year (Y1, Y2, Y3, ...)
-        # (year here means "customer-year" from sales_start_date month, but applied daily)
-        "p_buy_by_year": [0.06, 0.04, 0.03, 0.02],
-
-        # DAILY close (lost) probability
-        "p_close_day": 0.0002,  # ~0.6% per month rough equivalent (independent days)
-
-        # Invoice order multipliers within the day (1st, 2nd, 3rd, ...)
-        # Invoice #k happens with probability: p_buy_day(year) * p_invoice_by_nth[k-1]
-        "p_invoice_by_nth": [1.0, 0.15, 0.05],
-
-        # Device probability by devices_owned (0,1,2,...)
-        "p_device_by_nth": [0.90, 0.35, 0.15, 0.08],
-
-        # Refill lines distribution (1,2,3,...)
-        "refill_count_probs": [0.60, 0.30, 0.10],
-
-        # Basket composition
-        "p_refill_invoice": 0.95,
-        "p_accessory_invoice": 0.08,
-        "p_spare_part_invoice": 0.05,
-
-        # Returns (invoice-level)
-        "p_return_invoice": 0.02,
-
-        # Strict lost day behavior (default True, but explicit is clearer)
-        "stop_invoices_on_lost_day": True,
-
-        # Reproducibility (choose one)
-        "seed": 42,
-        "rng": None,  # or: random.Random(42)
-    }
-
-    res = generate_customer_sales_rows(**CUSTOMER_SALES_SETTINGS)
-
-    # Quick sanity output
-    print("rows:", len(res))
-    inv_cnt = len({r["invoice_id"] for r in res})
-    print("invoices:", inv_cnt)
-    print("first 5 rows:")
-    for r in res[:5]:
-        print(r)

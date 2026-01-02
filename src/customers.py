@@ -6,7 +6,6 @@ from datetime import date
 
 def generate_customers_df(
     *,
-    seed: int,
     faker_locale: str,
     n_customers: int,
     customers_created_at_start: str,   # ISO 'YYYY-MM-DD'
@@ -35,10 +34,8 @@ def generate_customers_df(
       call_opt_in (0/1)           If phone missing => 0
     """
     n = int(n_customers)
-
-    rng = np.random.default_rng(int(seed))
+    rng = np.random.default_rng()
     fake = Faker(faker_locale)
-    Faker.seed(int(seed))
 
     # created_at uniform by day
     start = np.datetime64(date.fromisoformat(customers_created_at_start).isoformat(), "D")
