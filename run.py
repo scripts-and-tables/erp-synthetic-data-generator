@@ -1,26 +1,34 @@
-import random
-from pathlib import Path
-import pandas as pd
+"""CLI orchestrator: items + customers + stores + promotions + invoice headers + lines."""
+from __future__ import annotations
+
 import argparse
+from datetime import date
+from pathlib import Path
 
-from src.items import build_items_universe_df, sample_items_dataset_df
+import pandas as pd
+
+from src.cohorts import assign_cohort
 from src.customers import generate_customers_df
-from src.sales import generate_customer_sales_rows
+from src.items import build_items_universe_df, sample_items_dataset_df
+from src.markets import MARKETS, get_market
+from src.promotions import build_promotions_df, build_promo_lookup
+from src.rng_utils import make_rngs
+from src.sales import generate_customer_sales
+from src.stores import build_stores_df
 
-# N_CUSTOMERS = 1_000 # 300_000
-# DATE_FROM = "2015-01-01"
-# DATE_TILL = "2025-12-31"
 
-OUT_DIR = Path("output_csv")
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Generate synthetic ERP/CRM datasets (items, customers, "
+                    "stores, promotions, invoice headers, sales lines)."
+    )
 
-def parse_args():
-    p = argparse.ArgumentParser(description="Generate synthetic ERP/CRM datasets (items, customers, sales)")
-
-    p.add_argument("--n-customers", type=int, default=1000, help="Number of customers to generate")
-
-    # Date range
-    p.add_argument("--date-from", default="2015-01-01", help="Customers created_at start date (YYYY-MM-DD)")
-    p.add_argument("--date-till", default="2025-12-31", help="Sales end date (YYYY-MM-DD)")
+    # Scale + dates
+    p.add_argument("--n-customers", type=int, default=1000)
+    p.add_argument("--date-from", default="2015-01-01",
+                   help="Customers created_at start date (YYYY-MM-DD)")
+    p.add_argument("--date-till", default="2025-12-31",
+                   help="Sales end date (YYYY-MM-DD)")
 
     # Items sample sizes
     p.add_argument("--n-devices", type=int, default=5)
@@ -30,28 +38,74 @@ def parse_args():
     p.add_argument("--n-bulk-refills", type=int, default=1)
 
     # Customer field probabilities
-    p.add_argument("--p-first-name", type=float, default=0.90)
-    p.add_argument("--p-last-name", type=float, default=0.60)
+    p.add_argument("--p-first-name", type=float, default=0.95)
+    p.add_argument("--p-last-name", type=float, default=0.85)
     p.add_argument("--p-email", type=float, default=0.70)
     p.add_argument("--p-phone", type=float, default=0.80)
-
-    # Opt-in probabilities (applied only if contact exists)
     p.add_argument("--p-email-opt-in", type=float, default=0.60)
     p.add_argument("--p-sms-opt-in", type=float, default=0.90)
     p.add_argument("--p-call-opt-in", type=float, default=0.75)
 
-    # Locale
-    p.add_argument("--faker-locale", default="en_US")
+    # Realism knobs
+    p.add_argument("--seed", type=int, default=42,
+                   help="Master RNG seed; propagated to numpy + python random + Faker.")
+    p.add_argument("--market", choices=sorted(MARKETS.keys()), default="us")
+    p.add_argument("--vat-rate", type=float, default=None,
+                   help="Override market default VAT.")
+    p.add_argument("--currency", default=None, help="Override market default currency.")
+    p.add_argument("--annual-inflation", type=float, default=None,
+                   help="Override market default annual inflation rate (e.g. 0.03).")
+
+    # Stores + promos
+    p.add_argument("--n-stores", type=int, default=8)
+    p.add_argument("--n-promotions-per-year", type=int, default=6)
+
+    # Returns
+    p.add_argument("--p-return", type=float, default=0.03)
+    returns_group = p.add_mutually_exclusive_group()
+    returns_group.add_argument("--enable-returns", dest="enable_returns",
+                               action="store_true", default=True)
+    returns_group.add_argument("--disable-returns", dest="enable_returns",
+                               action="store_false")
+
+    # Output
+    p.add_argument("--out-dir", default="output_csv")
 
     return p.parse_args()
 
-def main():
-    print('data generation - started')
 
+def _items_index_from_df(df_items: pd.DataFrame) -> dict[int, dict]:
+    idx: dict[int, dict] = {}
+    for rec in df_items.to_dict("records"):
+        rec["_listed_from_date_obj"] = date.fromisoformat(str(rec["listed_from_date"]))
+        idx[int(rec["product_id"])] = rec
+    return idx
+
+
+def main() -> None:
+    print("data generation - started")
     args = parse_args()
 
-    universe = build_items_universe_df()
+    rngs = make_rngs(args.seed)
+    market_cfg = get_market(
+        args.market,
+        vat_rate=args.vat_rate,
+        currency=args.currency,
+        annual_inflation=args.annual_inflation,
+    )
+    annual_inflation = float(market_cfg["inflation_default"])
 
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    date_from = date.fromisoformat(args.date_from)
+    date_till = date.fromisoformat(args.date_till)
+    if date_from > date_till:
+        raise SystemExit("--date-from must be <= --date-till")
+
+    # 1) Items
+    print("  building items...")
+    universe = build_items_universe_df()
     df_items = sample_items_dataset_df(
         universe,
         n_devices=args.n_devices,
@@ -59,12 +113,47 @@ def main():
         n_spare_parts=args.n_spare_parts,
         n_refills=args.n_refills,
         n_bulk_refills=args.n_bulk_refills,
+        rng=rngs.py,
+        currency=market_cfg["currency"],
+        listed_from_floor=date_from,
+        listing_window_days=365,
     )
-    df_items.to_csv(OUT_DIR / "items.csv", index=False)
+    df_items.to_csv(out_dir / "items.csv", index=False)
 
+    items_index = _items_index_from_df(df_items)
+    device_ids = df_items[df_items.category == "DEVICE"].product_id.tolist()
+    refill_ids = df_items[df_items.category == "REFILL"].product_id.tolist()
+    accessory_ids = df_items[df_items.category == "ACCESSORY"].product_id.tolist()
+    spare_ids = df_items[df_items.category == "SPARE_PART"].product_id.tolist()
+    device_brand_pool = sorted(df_items[df_items.category == "DEVICE"].brand.unique().tolist())
 
+    # 2) Stores
+    print("  building stores...")
+    df_stores = build_stores_df(
+        market_cfg=market_cfg, n_stores=args.n_stores,
+        rngs=rngs, opened_floor=date_from,
+    )
+    df_stores.to_csv(out_dir / "stores.csv", index=False)
+    store_ids = df_stores["store_id"].tolist()
+
+    # 3) Promotions
+    print("  building promotions...")
+    df_promos = build_promotions_df(
+        date_from=date_from, date_till=date_till,
+        market_cfg=market_cfg, n_per_year=args.n_promotions_per_year,
+        rngs=rngs,
+    )
+    df_promos.to_csv(out_dir / "promotions.csv", index=False)
+    promo_lookup = build_promo_lookup(
+        df_promos, date_from=date_from, date_till=date_till,
+        categories=["DEVICE", "REFILL", "ACCESSORY", "SPARE_PART"],
+    )
+
+    # 4) Customers
+    print("  building customers...")
     df_customers = generate_customers_df(
-        faker_locale=args.faker_locale,
+        rngs=rngs,
+        market_cfg=market_cfg,
         n_customers=args.n_customers,
         customers_created_at_start=args.date_from,
         customers_created_at_end=args.date_till,
@@ -72,70 +161,85 @@ def main():
         p_last_name=args.p_last_name,
         p_email=args.p_email,
         p_phone=args.p_phone,
-        p_email_opt_in=args.p_email_opt_in,   # only if email exists
-        p_sms_opt_in=args.p_sms_opt_in,     # only if phone exists
-        p_call_opt_in=args.p_call_opt_in,    # only if phone exists
-        blank="",
+        p_email_opt_in=args.p_email_opt_in,
+        p_sms_opt_in=args.p_sms_opt_in,
+        p_call_opt_in=args.p_call_opt_in,
+        device_brand_pool=device_brand_pool,
     )
-    df_customers.to_csv(OUT_DIR / "customers.csv", index=False)
+    df_customers.to_csv(out_dir / "customers.csv", index=False)
 
+    # 5) Sales (streaming)
+    print("  generating invoices and lines...")
+    headers_path = out_dir / "invoice_headers.csv"
+    lines_path = out_dir / "sales_lines.csv"
+    headers_first = True
+    lines_first = True
+    line_id = 1
 
-    # SALES
-    first_write = True
-    for customer_dict in df_customers.to_dict(orient="records"):
-        sales = generate_customer_sales_rows(
-            customer_id=customer_dict["customer_id"],
-            sales_start_date=customer_dict["created_at"],
+    n_total = len(df_customers)
+    progress_every = max(1, n_total // 20)
+
+    for i, cust in enumerate(df_customers.to_dict(orient="records"), start=1):
+        cohort_spec = assign_cohort(
+            int(cust["customer_id"]), rngs.seed, brand_pool=device_brand_pool,
+        )
+        # Per-customer deterministic RNG so customer order doesn't change output.
+        from random import Random
+        cust_rng = Random((rngs.seed * 2654435761) ^ (int(cust["customer_id"]) * 11400714819323198485) & 0xFFFFFFFFFFFFFFFF)
+
+        headers, lines, line_id = generate_customer_sales(
+            customer_id=int(cust["customer_id"]),
+            sales_start_date=str(cust["created_at"]),
             sales_end_date=args.date_till,
-            device_product_ids=df_items[df_items.category=='DEVICE'].product_id.to_list(),
-            refill_product_ids= df_items[df_items.category=='REFILL'].product_id.to_list(),
-            accessory_product_ids=df_items[df_items.category=='ACCESSORY'].product_id.to_list(),
-            spare_part_product_ids=df_items[df_items.category=='SPARE_PART'].product_id.to_list(),
-            store_ids= list(range(101, 110)),
-            p_buy_by_year= random.choice ([
-                [0.05, 0.07, 0.08, 0.09],       # +++
-                [0.04, 0.06, 0.07, 0.08],       # ++
-                [0.02, 0.03, 0.04, 0.06],       # ++
-                [0.01, 0.02, 0.03, 0.04],       # +
-                [0.06, 0.04, 0.03, 0.02],       # -
-                [0.03, 0.02, 0.015, 0.01],      # -
-                [0.01, 0.008, 0.006, 0.004]     # -
-            ]),
-            p_close_day=random.choice([0.0001, 0.0002, 0.0003, 0.0004]),
-            p_invoice_by_nth=random.choice([
-                [1.00, 0.80, 0.50, 0.10],
-                [1.00, 0.15, 0.05, 0.01],
-                [1.00, 0.05, 0.01, 0.00],
-                [1.00, 0.01],
-                [1.00, 0.00],
-            ]),
-            p_device_by_nth=random.choice([
-                [0.99, 0.10, 0.00],
-                [0.90, 0.35, 0.15, 0.01],
-                [0.95, 0.00],
-            ]),
-            refill_count_probs=random.choice([
-                [0.95, 0.80, 0.50, 0.10],
-                [0.90, 0.75, 0.60, 0.30],
-                [0.85, 0.80, 0.20, 0.05],
-                [0.70, 0.30, 0.10, 0.05],
-                [0.60, 0.30, 0.10, 0.05],
-            ]),
-            p_refill_invoice=0.95,
-            p_accessory_invoice=random.choice( [0.08, 0.06, 0.05, 0.03, 0.00]),
-            p_spare_part_invoice=random.choice([0.10, 0.05, 0.03, 0.01, 0.00]),
-            stop_invoices_on_lost_day=True)
+            items_index=items_index,
+            device_product_ids=device_ids,
+            refill_product_ids=refill_ids,
+            accessory_product_ids=accessory_ids,
+            spare_part_product_ids=spare_ids,
+            store_ids=store_ids,
+            market_cfg=market_cfg,
+            promo_lookup=promo_lookup,
+            annual_inflation=annual_inflation,
+            p_return=args.p_return,
+            enable_returns=args.enable_returns,
+            cohort_spec=cohort_spec,
+            rng=cust_rng,
+            line_id_start=line_id,
+        )
 
-        if not sales:
-            continue
+        if headers:
+            pd.DataFrame.from_records(headers).to_csv(
+                headers_path, mode="w" if headers_first else "a",
+                index=False, header=headers_first,
+            )
+            headers_first = False
+        if lines:
+            pd.DataFrame.from_records(lines).to_csv(
+                lines_path, mode="w" if lines_first else "a",
+                index=False, header=lines_first,
+            )
+            lines_first = False
 
-        df_chunk = pd.DataFrame.from_records(sales)
+        if i % progress_every == 0 or i == n_total:
+            print(f"    customers processed: {i}/{n_total}")
 
-        mode = "w" if first_write else "a"
-        df_chunk.to_csv(OUT_DIR / 'sales.csv', mode=mode, index=False, header=first_write)
+    # If no headers were ever written, still produce empty files with headers
+    if headers_first:
+        pd.DataFrame(columns=[
+            "invoice_id", "customer_id", "store_id", "order_date", "ship_date",
+            "due_date", "subtotal", "discount_total", "tax_amount", "freight",
+            "grand_total", "vat_rate", "currency", "payment_method",
+            "promotion_id", "is_return", "reference_invoice_id", "n_lines",
+        ]).to_csv(headers_path, index=False)
+    if lines_first:
+        pd.DataFrame(columns=[
+            "line_id", "invoice_id", "product_id", "quantity", "unit_price",
+            "discount_pct", "discount_amount", "extended_amount", "line_total",
+            "unit_standard_cost", "line_cost", "gross_margin",
+        ]).to_csv(lines_path, index=False)
 
-        first_write = False
-    print('data generation - completed')
+    print("data generation - completed")
+
 
 if __name__ == "__main__":
     main()
