@@ -1,99 +1,99 @@
-product_id,product_name,brand,category,gramm_g,unit_price
-1,Good Smell Refill Liquid Pine 30,Good Smell,REFILL,30,19.0
-2,BreezeLine Refill Liquid Chocolate 100,BreezeLine,REFILL,100,58.5
-3,BreezeLine Adhesive Mount Pad,BreezeLine,ACCESSORY,,39.0
-4,BreezeLine Refill Liquid Lavender 30,BreezeLine,REFILL,30,19.0
-5,AromaWave Refill Liquid Coffee 50,AromaWave,REFILL,50,30.0
-6,FreshNest Diffuser Machine - Compact,FreshNest,DEVICE,,605.5
-7,FreshNest Car Vent Holder,FreshNest,ACCESSORY,,24.0
-8,BreezeLine Refill Liquid Coffee 100,BreezeLine,REFILL,100,56.0
-9,FreshNest Refill Liquid Lavender 10,FreshNest,REFILL,10,8.5
-10,AromaWave Refill Liquid Chocolate 30,AromaWave,REFILL,30,21.0
-11,Citrus & Co Refill Liquid Rose 100,Citrus & Co,REFILL,100,54.5
-12,BreezeLine Seal Ring (O-Ring),BreezeLine,SPARE_PART,,130.0
-13,FreshNest Refill Liquid Ocean 50,FreshNest,REFILL,50,33.0
-14,BreezeLine Refill Liquid Vanilla 100,BreezeLine,REFILL,100,62.5
-15,FreshNest Refill Liquid Rose 50,FreshNest,REFILL,50,35.0
-16,AromaWave Refill Liquid Coffee 10,AromaWave,REFILL,10,9.0
-17,FreshNest Refill Liquid Ocean 20,FreshNest,REFILL,20,15.0
-18,AromaDrive Desk Stand Base,AromaDrive,ACCESSORY,,64.0
-19,Good Smell Refill Liquid Citrus 100,Good Smell,REFILL,100,59.0
-20,FreshNest Refill Liquid Pine 10,FreshNest,REFILL,10,9.0
-21,BreezeLine USB Cable,BreezeLine,SPARE_PART,,54.5
-22,AromaDrive Nebulizer Machine - Pro,AromaDrive,DEVICE,,306.0
-23,Citrus & Co Refill Liquid Pine 20,Citrus & Co,REFILL,20,13.0
-24,BreezeLine Refill Liquid Rose 100,BreezeLine,REFILL,100,54.0
-25,BreezeLine Refill Liquid Citrus 20,BreezeLine,REFILL,20,13.0
-26,Good Smell Refill Liquid Pine 100,Good Smell,REFILL,100,58.5
-27,BreezeLine Refill Liquid Mint 20,BreezeLine,REFILL,20,14.5
-28,Citrus & Co Refill Liquid Chocolate 30,Citrus & Co,REFILL,30,17.0
-29,Good Smell Refill Liquid Coffee 20,Good Smell,REFILL,20,12.5
-30,AromaDrive Hanging Strap,AromaDrive,ACCESSORY,,60.0
-31,AromaDrive Diffuser Machine - Home,AromaDrive,DEVICE,,358.5
-32,AromaWave Refill Liquid Pine 100,AromaWave,REFILL,100,62.0
-33,FreshNest Refill Liquid Coffee 20,FreshNest,REFILL,20,16.5
-34,AromaWave Refill Liquid Ocean 20,AromaWave,REFILL,20,13.0
-35,BreezeLine Refill Liquid Ocean 30,BreezeLine,REFILL,30,19.0
-36,BreezeLine Refill Liquid Rose 30,BreezeLine,REFILL,30,19.0
-37,AromaWave Refill Liquid Rose 100,AromaWave,REFILL,100,57.5
-38,FreshNest Refill Liquid Citrus 50,FreshNest,REFILL,50,35.0
-39,FreshNest USB Cable,FreshNest,SPARE_PART,,94.5
-40,Citrus & Co Refill Liquid Rose 30,Citrus & Co,REFILL,30,19.0
-41,Citrus & Co Refill Liquid Jasmine 100,Citrus & Co,REFILL,100,48.5
-42,AromaWave Refill Liquid Rose 50,AromaWave,REFILL,50,31.0
-43,AromaWave Refill Liquid Pine 50,AromaWave,REFILL,50,32.5
-44,FreshNest Wall Bracket Mount,FreshNest,ACCESSORY,,38.5
-45,AromaWave Refill Liquid Lavender 500 (Industrial),AromaWave,REFILL,500,123.0
-46,Good Smell Refill Liquid Ocean 30,Good Smell,REFILL,30,18.0
-47,BreezeLine Cable Organizer Clip,BreezeLine,ACCESSORY,,13.5
-48,AromaDrive USB Cable,AromaDrive,SPARE_PART,,54.0
-49,AromaWave Refill Liquid Chocolate 20,AromaWave,REFILL,20,13.0
-50,FreshNest Refill Liquid Chocolate 100,FreshNest,REFILL,100,68.0
-51,BreezeLine Refill Liquid Lavender 20,BreezeLine,REFILL,20,15.0
-52,Citrus & Co Refill Liquid Rose 10,Citrus & Co,REFILL,10,7.5
-53,FreshNest Cleaning Wipes Pack,FreshNest,ACCESSORY,,19.0
-54,BreezeLine Protective Sleeve,BreezeLine,ACCESSORY,,59.0
-55,FreshNest Refill Liquid Jasmine 100,FreshNest,REFILL,100,62.0
-56,Good Smell Refill Liquid Jasmine 30,Good Smell,REFILL,30,19.5
-57,Citrus & Co Refill Liquid Mint 30,Citrus & Co,REFILL,30,18.0
-58,FreshNest Scent Cartridge Holder,FreshNest,SPARE_PART,,124.5
-59,BreezeLine Refill Liquid Mint 50,BreezeLine,REFILL,50,32.0
-60,Citrus & Co Refill Liquid Rose 50,Citrus & Co,REFILL,50,26.0
-61,Citrus & Co Refill Liquid Citrus 100,Citrus & Co,REFILL,100,49.5
-62,BreezeLine Refill Liquid Pine 20,BreezeLine,REFILL,20,14.5
-63,Good Smell Refill Liquid Chocolate 10,Good Smell,REFILL,10,8.0
-64,FreshNest Refill Liquid Citrus 30,FreshNest,REFILL,30,20.0
-65,Good Smell Refill Liquid Jasmine 50,Good Smell,REFILL,50,31.0
-66,FreshNest Diffuser Wick Set,FreshNest,SPARE_PART,,117.0
-67,AromaWave Refill Liquid Citrus 50,AromaWave,REFILL,50,28.5
-68,AromaWave Refill Liquid Jasmine 10,AromaWave,REFILL,10,8.0
-69,FreshNest Refill Liquid Chocolate 20,FreshNest,REFILL,20,15.5
-70,FreshNest Refill Liquid Vanilla 10,FreshNest,REFILL,10,9.0
-71,BreezeLine Wall Bracket Mount,BreezeLine,ACCESSORY,,29.5
-72,Citrus & Co Refill Liquid Jasmine 20,Citrus & Co,REFILL,20,12.0
-73,AromaWave Refill Liquid Pine 20,AromaWave,REFILL,20,14.0
-74,Good Smell Refill Liquid Lavender 20,Good Smell,REFILL,20,12.5
-75,BreezeLine Refill Liquid Lavender 50,BreezeLine,REFILL,50,30.0
-76,Good Smell Refill Liquid Mint 50,Good Smell,REFILL,50,29.0
-77,AromaWave Refill Liquid Vanilla 100,AromaWave,REFILL,100,56.0
-78,AromaDrive Travel Pouch,AromaDrive,ACCESSORY,,45.0
-79,AromaWave Refill Liquid Coffee 30,AromaWave,REFILL,30,20.0
-80,BreezeLine Car Diffuser Machine - Mini,BreezeLine,DEVICE,,231.5
-81,Citrus & Co Refill Liquid Lavender 100,Citrus & Co,REFILL,100,49.5
-82,BreezeLine Refill Liquid Vanilla 50,BreezeLine,REFILL,50,31.5
-83,Citrus & Co Refill Liquid Coffee 30,Citrus & Co,REFILL,30,18.5
-84,Citrus & Co Refill Liquid Vanilla 50,Citrus & Co,REFILL,50,28.5
-85,AromaWave Refill Liquid Pine 30,AromaWave,REFILL,30,18.5
-86,Good Smell Refill Liquid Rose 10,Good Smell,REFILL,10,8.0
-87,FreshNest Refill Liquid Coffee 10,FreshNest,REFILL,10,10.0
-88,Good Smell Refill Liquid Rose 30,Good Smell,REFILL,30,17.5
-89,AromaDrive Replacement Cap,AromaDrive,SPARE_PART,,78.5
-90,Good Smell Refill Liquid Rose 100,Good Smell,REFILL,100,58.0
-91,Citrus & Co Refill Liquid Ocean 100,Citrus & Co,REFILL,100,49.0
-92,FreshNest Nozzle Holder,FreshNest,SPARE_PART,,131.5
-93,AromaDrive Car Diffuser Machine - Mini,AromaDrive,DEVICE,,618.5
-94,Citrus & Co Refill Liquid Chocolate 100,Citrus & Co,REFILL,100,50.5
-95,Good Smell Refill Liquid Coffee 100,Good Smell,REFILL,100,55.0
-96,BreezeLine Refill Liquid Vanilla 10,BreezeLine,REFILL,10,9.0
-97,FreshNest Refill Liquid Pine 20,FreshNest,REFILL,20,16.0
-98,FreshNest Refill Liquid Ocean 30,FreshNest,REFILL,30,22.5
+product_id,product_name,brand,category,subcategory,gramm_g,list_price,standard_cost,currency,listed_from_date,compatible_device_brand,is_active
+1,FreshNest Refill Liquid Pine 100,FreshNest,REFILL,Refill Small,100,61.0,22.3,USD,2015-06-11,FreshNest,1
+2,Citrus & Co Refill Liquid Rose 10,Citrus & Co,REFILL,Refill Small,10,7.5,2.62,USD,2015-11-26,,1
+3,Good Smell Refill Liquid Chocolate 50,Good Smell,REFILL,Refill Small,50,29.0,9.91,USD,2015-05-07,,1
+4,FreshNest Travel Pouch,FreshNest,ACCESSORY,Cover,,52.5,24.21,USD,2015-08-08,FreshNest,1
+5,AromaWave Refill Liquid Citrus 10,AromaWave,REFILL,Refill Small,10,9.0,3.12,USD,2015-04-23,,1
+6,AromaWave Refill Liquid Rose 20,AromaWave,REFILL,Refill Small,20,15.0,5.06,USD,2015-09-10,,1
+7,AromaDrive Nebulizer Machine - Pro,AromaDrive,DEVICE,Pro Diffuser,,198.5,104.91,USD,2015-11-18,AromaDrive,1
+8,FreshNest Refill Liquid Citrus 50,FreshNest,REFILL,Refill Small,50,31.5,11.22,USD,2015-11-02,FreshNest,1
+9,BreezeLine Replacement Cap,BreezeLine,SPARE_PART,Cap,,60.0,31.49,USD,2015-09-28,BreezeLine,1
+10,Citrus & Co Refill Liquid Lavender 20,Citrus & Co,REFILL,Refill Small,20,12.0,4.22,USD,2015-01-06,,1
+11,FreshNest Refill Liquid Jasmine 20,FreshNest,REFILL,Refill Small,20,16.0,5.38,USD,2015-10-02,FreshNest,1
+12,FreshNest Wall Bracket Mount,FreshNest,ACCESSORY,Mount,,69.0,30.55,USD,2015-05-31,FreshNest,1
+13,BreezeLine Refill Liquid Chocolate 30,BreezeLine,REFILL,Refill Small,30,19.5,6.79,USD,2015-05-15,BreezeLine,1
+14,Good Smell Refill Liquid Pine 30,Good Smell,REFILL,Refill Small,30,20.0,7.18,USD,2015-09-17,,1
+15,BreezeLine Refill Liquid Coffee 30,BreezeLine,REFILL,Refill Small,30,21.0,7.62,USD,2015-06-02,BreezeLine,1
+16,Good Smell Refill Liquid Vanilla 30,Good Smell,REFILL,Refill Small,30,19.5,6.83,USD,2015-04-12,,1
+17,BreezeLine Refill Liquid Rose 10,BreezeLine,REFILL,Refill Small,10,8.0,2.87,USD,2015-10-04,BreezeLine,1
+18,BreezeLine Refill Liquid Mint 20,BreezeLine,REFILL,Refill Small,20,15.0,5.47,USD,2015-01-01,BreezeLine,1
+19,Citrus & Co Refill Liquid Rose 20,Citrus & Co,REFILL,Refill Small,20,13.0,4.54,USD,2015-02-27,,1
+20,AromaWave Refill Liquid Citrus 100,AromaWave,REFILL,Refill Small,100,62.0,22.52,USD,2015-06-07,,1
+21,Citrus & Co Refill Liquid Chocolate 10,Citrus & Co,REFILL,Refill Small,10,7.5,2.56,USD,2015-10-18,,1
+22,FreshNest Refill Liquid Citrus 30,FreshNest,REFILL,Refill Small,30,23.0,7.72,USD,2015-09-06,FreshNest,1
+23,BreezeLine Refill Liquid Jasmine 20,BreezeLine,REFILL,Refill Small,20,14.5,5.32,USD,2015-09-30,BreezeLine,1
+24,AromaWave Refill Liquid Rose 10,AromaWave,REFILL,Refill Small,10,9.0,3.03,USD,2015-09-01,,1
+25,FreshNest Refill Liquid Rose 100,FreshNest,REFILL,Refill Small,100,68.5,23.17,USD,2015-09-28,FreshNest,1
+26,Citrus & Co Refill Liquid Pine 50,Citrus & Co,REFILL,Refill Small,50,29.0,10.07,USD,2015-04-19,,1
+27,Good Smell Refill Liquid Lavender 50,Good Smell,REFILL,Refill Small,50,31.0,11.13,USD,2015-12-20,,1
+28,BreezeLine Cable Organizer Clip,BreezeLine,ACCESSORY,Cable,,30.0,14.17,USD,2015-11-29,BreezeLine,1
+29,AromaWave Refill Liquid Pine 100,AromaWave,REFILL,Refill Small,100,57.0,20.75,USD,2015-08-20,,1
+30,FreshNest Refill Liquid Pine 30,FreshNest,REFILL,Refill Small,30,20.0,6.81,USD,2015-06-23,FreshNest,1
+31,Citrus & Co Refill Liquid Lavender 30,Citrus & Co,REFILL,Refill Small,30,16.0,5.63,USD,2015-10-29,,1
+32,BreezeLine Refill Liquid Coffee 10,BreezeLine,REFILL,Refill Small,10,8.0,2.68,USD,2015-11-20,BreezeLine,1
+33,BreezeLine Refill Liquid Citrus 10,BreezeLine,REFILL,Refill Small,10,8.0,2.68,USD,2015-01-17,BreezeLine,1
+34,BreezeLine Refill Liquid Ocean 50,BreezeLine,REFILL,Refill Small,50,32.5,10.89,USD,2015-05-02,BreezeLine,1
+35,Good Smell Refill Liquid Ocean 100,Good Smell,REFILL,Refill Small,100,53.0,18.52,USD,2015-10-04,,1
+36,BreezeLine Refill Liquid Lavender 30,BreezeLine,REFILL,Refill Small,30,18.5,6.76,USD,2015-10-20,BreezeLine,1
+37,Good Smell Refill Liquid Citrus 50,Good Smell,REFILL,Refill Small,50,29.5,10.06,USD,2015-08-31,,1
+38,AromaDrive Desk Stand Base,AromaDrive,ACCESSORY,Mount,,26.5,11.44,USD,2015-08-09,AromaDrive,1
+39,AromaWave Refill Liquid Mint 100,AromaWave,REFILL,Refill Small,100,56.5,19.6,USD,2015-01-28,,1
+40,FreshNest Refill Liquid Coffee 1000 (Industrial),FreshNest,REFILL,Refill Bulk,1000,262.5,96.32,USD,2015-02-20,FreshNest,1
+41,BreezeLine Refill Liquid Mint 50,BreezeLine,REFILL,Refill Small,50,28.5,10.2,USD,2015-02-25,BreezeLine,1
+42,BreezeLine Refill Liquid Vanilla 20,BreezeLine,REFILL,Refill Small,20,13.5,4.58,USD,2015-08-18,BreezeLine,1
+43,FreshNest Nozzle Holder,FreshNest,SPARE_PART,Nozzle,,42.0,20.92,USD,2015-02-08,FreshNest,1
+44,Citrus & Co Refill Liquid Pine 30,Citrus & Co,REFILL,Refill Small,30,17.5,6.35,USD,2015-10-09,,1
+45,Citrus & Co Refill Liquid Coffee 30,Citrus & Co,REFILL,Refill Small,30,16.5,5.86,USD,2015-10-04,,1
+46,FreshNest Refill Liquid Lavender 20,FreshNest,REFILL,Refill Small,20,16.0,5.86,USD,2015-05-02,FreshNest,1
+47,AromaDrive Car Vent Holder,AromaDrive,ACCESSORY,Mount,,42.5,18.58,USD,2015-07-25,AromaDrive,1
+48,AromaWave Refill Liquid Ocean 100,AromaWave,REFILL,Refill Small,100,61.5,20.8,USD,2015-01-02,,1
+49,FreshNest Refill Liquid Jasmine 30,FreshNest,REFILL,Refill Small,30,23.0,7.86,USD,2015-08-21,FreshNest,1
+50,BreezeLine Refill Liquid Mint 100,BreezeLine,REFILL,Refill Small,100,56.0,19.99,USD,2015-10-12,BreezeLine,1
+51,BreezeLine Diffuser Machine - Home,BreezeLine,DEVICE,Home Diffuser,,419.5,223.57,USD,2015-04-22,BreezeLine,1
+52,AromaDrive Clip Replacement,AromaDrive,SPARE_PART,Mount,,100.0,50.21,USD,2015-06-10,AromaDrive,1
+53,AromaWave Refill Liquid Lavender 10,AromaWave,REFILL,Refill Small,10,8.0,2.82,USD,2015-09-15,,1
+54,Citrus & Co Refill Liquid Citrus 100,Citrus & Co,REFILL,Refill Small,100,55.5,19.49,USD,2015-01-30,,1
+55,Citrus & Co Refill Liquid Citrus 10,Citrus & Co,REFILL,Refill Small,10,8.0,2.68,USD,2015-04-06,,1
+56,AromaDrive Power Adapter,AromaDrive,SPARE_PART,Power,,25.5,13.21,USD,2015-07-26,AromaDrive,1
+57,Citrus & Co Refill Liquid Lavender 100,Citrus & Co,REFILL,Refill Small,100,49.0,17.82,USD,2015-05-07,,1
+58,AromaWave Refill Liquid Lavender 30,AromaWave,REFILL,Refill Small,30,19.5,6.51,USD,2015-02-11,,1
+59,AromaDrive Wall Bracket Mount,AromaDrive,ACCESSORY,Mount,,50.5,22.78,USD,2015-05-14,AromaDrive,1
+60,BreezeLine Cleaning Wipes Pack,BreezeLine,ACCESSORY,Care,,54.5,23.88,USD,2015-07-22,BreezeLine,1
+61,FreshNest Replacement Cap,FreshNest,SPARE_PART,Cap,,100.0,49.79,USD,2015-02-07,FreshNest,1
+62,BreezeLine Refill Liquid Rose 30,BreezeLine,REFILL,Refill Small,30,18.0,6.38,USD,2015-10-16,BreezeLine,1
+63,Citrus & Co Refill Liquid Mint 10,Citrus & Co,REFILL,Refill Small,10,8.5,2.85,USD,2015-04-20,,1
+64,FreshNest Refill Liquid Citrus 10,FreshNest,REFILL,Refill Small,10,9.5,3.2,USD,2015-06-28,FreshNest,1
+65,AromaDrive Scent Cartridge Holder,AromaDrive,SPARE_PART,Cartridge,,139.5,68.84,USD,2015-03-22,AromaDrive,1
+66,FreshNest Refill Liquid Citrus 20,FreshNest,REFILL,Refill Small,20,15.0,5.27,USD,2015-06-04,FreshNest,1
+67,BreezeLine Refill Liquid Jasmine 10,BreezeLine,REFILL,Refill Small,10,8.5,3.12,USD,2015-12-01,BreezeLine,1
+68,Good Smell Refill Liquid Coffee 50,Good Smell,REFILL,Refill Small,50,29.0,10.32,USD,2015-10-11,,1
+69,AromaDrive Diffuser Wick Set,AromaDrive,SPARE_PART,Wick,,100.5,52.46,USD,2015-03-10,AromaDrive,1
+70,BreezeLine Car Diffuser Machine - Mini,BreezeLine,DEVICE,Car Diffuser,,575.5,324.2,USD,2015-03-21,BreezeLine,1
+71,Good Smell Refill Liquid Ocean 50,Good Smell,REFILL,Refill Small,50,28.0,9.9,USD,2015-06-25,,1
+72,Citrus & Co Refill Liquid Mint 20,Citrus & Co,REFILL,Refill Small,20,12.0,4.26,USD,2015-05-16,,1
+73,Good Smell Refill Liquid Citrus 10,Good Smell,REFILL,Refill Small,10,8.0,2.73,USD,2015-01-27,,1
+74,BreezeLine Refill Liquid Chocolate 100,BreezeLine,REFILL,Refill Small,100,54.0,18.76,USD,2015-05-22,BreezeLine,1
+75,Good Smell Refill Liquid Vanilla 10,Good Smell,REFILL,Refill Small,10,7.5,2.58,USD,2015-03-08,,1
+76,AromaWave Refill Liquid Jasmine 50,AromaWave,REFILL,Refill Small,50,31.0,10.59,USD,2015-08-15,,1
+77,FreshNest Refill Liquid Jasmine 10,FreshNest,REFILL,Refill Small,10,9.5,3.3,USD,2015-01-05,FreshNest,1
+78,FreshNest Refill Liquid Mint 20,FreshNest,REFILL,Refill Small,20,14.5,5.3,USD,2015-12-20,FreshNest,1
+79,FreshNest Refill Liquid Vanilla 10,FreshNest,REFILL,Refill Small,10,10.0,3.52,USD,2015-07-09,FreshNest,1
+80,Citrus & Co Refill Liquid Rose 50,Citrus & Co,REFILL,Refill Small,50,28.0,9.46,USD,2015-03-07,,1
+81,AromaWave Refill Liquid Lavender 20,AromaWave,REFILL,Refill Small,20,13.0,4.49,USD,2015-01-21,,1
+82,AromaWave Refill Liquid Ocean 50,AromaWave,REFILL,Refill Small,50,32.5,11.05,USD,2015-05-08,,1
+83,Good Smell Refill Liquid Chocolate 20,Good Smell,REFILL,Refill Small,20,13.5,4.66,USD,2015-10-14,,1
+84,Good Smell Refill Liquid Mint 50,Good Smell,REFILL,Refill Small,50,31.0,10.75,USD,2015-11-14,,1
+85,FreshNest Car Diffuser Machine - Clip,FreshNest,DEVICE,Car Diffuser,,703.5,376.74,USD,2015-03-25,FreshNest,1
+86,Citrus & Co Refill Liquid Chocolate 20,Citrus & Co,REFILL,Refill Small,20,13.5,4.87,USD,2015-07-31,,1
+87,FreshNest Refill Liquid Lavender 30,FreshNest,REFILL,Refill Small,30,20.0,7.17,USD,2015-06-20,FreshNest,1
+88,AromaDrive Adhesive Mount Pad,AromaDrive,ACCESSORY,Mount,,41.5,18.99,USD,2015-05-08,AromaDrive,1
+89,FreshNest Refill Liquid Jasmine 100,FreshNest,REFILL,Refill Small,100,61.5,22.14,USD,2015-02-25,FreshNest,1
+90,Good Smell Refill Liquid Rose 30,Good Smell,REFILL,Refill Small,30,18.0,6.01,USD,2015-08-29,,1
+91,FreshNest Decor Sticker Pack,FreshNest,ACCESSORY,Decor,,66.5,29.81,USD,2015-06-06,FreshNest,1
+92,AromaDrive Nozzle Holder,AromaDrive,SPARE_PART,Nozzle,,137.0,66.6,USD,2015-12-04,AromaDrive,1
+93,AromaWave Refill Liquid Pine 30,AromaWave,REFILL,Refill Small,30,18.5,6.36,USD,2015-02-05,,1
+94,AromaWave Refill Liquid Ocean 30,AromaWave,REFILL,Refill Small,30,21.0,7.19,USD,2015-11-25,,1
+95,AromaWave Refill Liquid Vanilla 100,AromaWave,REFILL,Refill Small,100,58.0,20.66,USD,2015-10-02,,1
+96,Good Smell Refill Liquid Vanilla 50,Good Smell,REFILL,Refill Small,50,28.0,9.34,USD,2015-05-14,,1
+97,AromaDrive Diffuser Machine - Compact,AromaDrive,DEVICE,Home Diffuser,,630.0,338.37,USD,2015-02-25,AromaDrive,1
+98,BreezeLine Travel Pouch,BreezeLine,ACCESSORY,Cover,,34.5,15.97,USD,2015-08-12,BreezeLine,1

@@ -1,189 +1,334 @@
-# ERP Synthetic Data Generator
+# 🛒 ERP Synthetic Data Generator
 
-A configurable Python script that generates **realistic synthetic business data** for demos, testing, and analytics prototypes — especially when real ERP/CRM datasets are unavailable (or unavailable for long historical periods).
+> **Realistic, multi-year, AdventureWorks-style retail data — generated from a single Python command, fully reproducible from a seed.**
 
-The generator is built around an **air-freshener / diffuser ecosystem** but produces an AdventureWorks-style relational schema that is generic enough to plug into any retail/CRM analytics workflow.
+A configurable synthetic data generator for retail/CRM/ERP analytics. Designed to look and feel like a real production dataset: invoice-level detail with line items, persistent customer cohorts, holiday seasonality, multi-market support (US / GCC / EU), promotions, returns, and inflation. Inspired by Microsoft's **AdventureWorks** schema and the **RetailSynth** behavioral simulator, packaged as a clean, dependency-light Python project.
 
----
-
-## Highlights
-
-* **Realistic pricing & margins** — every item has a `list_price` and a `standard_cost`; line items expose `discount_pct`, `discount_amount`, `unit_price`, `extended_amount`, `line_total`, `line_cost`, and `gross_margin`.
-* **Seasonality** — month-of-year curves, day-of-week weighting, and holiday spikes (Black Friday, Cyber Monday, Christmas, Independence Day for US/EU; Ramadan, Eid al-Fitr, Eid al-Adha, UAE National Day for GCC).
-* **Customer demographics & cohorts** — gender, birth year, marital status, occupation, yearly income (lognormal, country-aware), education, geography. Each customer is permanently assigned to one of 6 behavioral cohorts (LOYAL_HEAVY, LOYAL_LIGHT, GROWING, DECLINING, ONE_SHOT, CHURN_RISK).
-* **Promotions** — automatic promotion master with market-specific events (Black Friday week, Boxing Week, Ramadan Specials, Eid Sale, plus generic seasonal sales). Discounts are applied at the line level; the most-used promo on an invoice is recorded on its header.
-* **Returns** — ~3% of orders generate a linked return invoice 1–30 days later with negated quantities and money fields (`is_return=1`, `reference_invoice_id`).
-* **Inflation** — `unit_price` at sale time = `list_price × (1 + annual_inflation)^years_since_listing`, so a 10-year run shows realistic price drift.
-* **Multi-market** — `--market {us,gcc,eu}` flag swaps locale, currency (USD / AED / EUR), VAT rate, payment methods, weekend definition (Sat-Sun vs Fri-Sat), and holiday calendar.
-* **Reproducibility** — single `--seed` flag drives all RNGs (numpy, python `random`, Faker, pandas `.sample`). Same seed → identical CSVs.
-* **Streaming output** — invoice headers and lines are appended per customer; safe for runs with millions of rows.
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/) [![pandas](https://img.shields.io/badge/pandas-2.x-150458)](https://pandas.pydata.org/) [![numpy](https://img.shields.io/badge/numpy-2.x-013243)](https://numpy.org/) [![Faker](https://img.shields.io/badge/Faker-40-orange)](https://faker.readthedocs.io/) [![License](https://img.shields.io/badge/license-MIT-green)]()
 
 ---
 
-## What you get
+## 📊 What it generates (in 60 seconds)
 
-Six CSVs in `--out-dir` (default `output_csv/`):
+A single `python run.py` invocation produces an **AdventureWorks-style 6-table relational schema**:
 
-| File | Type | Rows |
-|---|---|---|
-| `items.csv` | master | one per SKU |
-| `customers.csv` | master | one per customer |
-| `stores.csv` | master | one per physical/online store |
-| `promotions.csv` | master | one per promotion campaign |
-| `invoice_headers.csv` | fact | one per invoice (incl. returns) |
-| `sales_lines.csv` | fact | one per line item |
+| 1,000 customers | 100,627 sales lines | 11 years | $10.4M gross revenue |
+|:-:|:-:|:-:|:-:|
+| 98 SKUs across 4 categories | 52,620 invoices + 1,480 returns | 8 stores · 66 promotions | 65% gross margin |
 
-### Schema
+### The numbers tell a story
 
-#### `items.csv`
-`product_id` (PK), `product_name`, `brand`, `category` (`DEVICE`/`REFILL`/`ACCESSORY`/`SPARE_PART`), `subcategory` (e.g. `Home Diffuser`, `Refill Small/Bulk`, `Mount`, `Cable`), `gramm_g`, `list_price`, `standard_cost`, `currency`, `listed_from_date`, `compatible_device_brand`, `is_active`.
+![Monthly revenue](docs/charts/monthly_revenue.png)
 
-#### `customers.csv`
-Core: `customer_id` (PK), `created_at`, `first_name`, `last_name`, `email`, `phone`, `email_opt_in`, `sms_opt_in`, `call_opt_in`.
-Demographics: `gender`, `birth_year`, `marital_status`, `occupation`, `yearly_income`, `num_children`, `house_owner_flag`, `education`.
-Geography: `country`, `region`, `city`, `postal_code`.
-Behavioral: `cohort`, `price_sensitivity` (0..1), `brand_affinity`, `market`.
+> **Holiday seasonality is built in.** November and December consistently spike 2-3× above the baseline, year over year. The ramp from 2015 → 2025 reflects the logistic-growth signup curve that replaces the typical "uniform random" pattern.
 
-#### `stores.csv`
-`store_id` (PK), `store_name`, `country`, `region`, `city`, `opened_date`, `store_type` (Flagship/Standard/Kiosk/Online).
+![Daily revenue with holiday markers](docs/charts/holiday_spikes_2023.png)
 
-#### `promotions.csv`
-`promotion_id` (PK), `name`, `discount_pct`, `category_scope` (`ALL` or one category), `start_date`, `end_date`, `market`.
+> **Holiday calendar is real.** Black Friday, Cyber Monday, Christmas Eve, July 4th — every market gets its own holiday bumps. GCC swaps in Ramadan + Eid al-Fitr + Eid al-Adha, EU keeps Boxing Week.
 
-#### `invoice_headers.csv`
-`invoice_id` (PK), `customer_id` (FK), `store_id` (FK), `order_date`, `ship_date`, `due_date`, `subtotal`, `discount_total`, `tax_amount`, `freight`, `grand_total`, `vat_rate`, `currency`, `payment_method`, `promotion_id` (FK), `is_return`, `reference_invoice_id`, `n_lines`.
+---
 
-#### `sales_lines.csv`
-`line_id` (PK), `invoice_id` (FK), `product_id` (FK), `quantity`, `unit_price`, `discount_pct`, `discount_amount`, `extended_amount`, `line_total`, `unit_standard_cost`, `line_cost`, `gross_margin`.
+## 🎯 Why this project is different
 
-#### Foreign-key graph
+Most public retail datasets are either tiny (Iris, Wine), tabular without behavior (Northwind), or behaviorally flat (uniform random orders). This one was designed from the ground up to be **statistically realistic** along the axes that matter for analytics work:
+
+| Axis | What's modeled |
+|---|---|
+| **Pricing** | `list_price` and `standard_cost` per SKU; price drifts by `(1 + inflation)^years_since_listing`; line-level discount when a promo is active |
+| **Margins** | `gross_margin = line_total − line_cost` per line; category-specific cost ratios (DEVICE 55% · REFILL 35% · ACCESSORY 45% · SPARE_PART 50%) |
+| **Seasonality** | `month_factor × dow_factor × holiday_bump` multiplier on daily buy probability |
+| **Customer cohorts** | 6 persistent behavioral segments (LOYAL_HEAVY, LOYAL_LIGHT, GROWING, DECLINING, ONE_SHOT, CHURN_RISK) deterministically assigned per customer |
+| **Demographics** | Gender, birth year, marital status, occupation, education, country-aware lognormal income, geography (city/region/postal) |
+| **Promotions** | Master table with anchored events (Black Friday Week, Boxing Week, Ramadan Specials, Eid Sale) plus generic seasonal sales |
+| **Returns** | ~3% of orders generate a linked return invoice 1–30 days later with negated quantities and money fields |
+| **Inflation** | Multi-year price drift; standard_cost is **frozen** at listing time → realistic margin expansion as prices inflate |
+| **Multi-market** | `--market {us,gcc,eu}` swaps locale, currency, VAT, payment methods, weekend definition (Sat/Sun vs Fri/Sat), and holiday calendar |
+| **Reproducibility** | Single `--seed` drives all RNGs (numpy + python random + Faker + pandas); same seed → byte-identical CSVs |
+| **Performance** | Streaming CSV writes, precomputed promo lookup tables, vectorized demographics — 1k customers × 11 years in ~70 seconds |
+
+---
+
+## 📈 What you can do with the data
+
+The shipped sample (1,000 customers × 11 years, seed 42) supports every standard retail analysis out of the box:
+
+### Cohort retention
+![Cohort retention](docs/charts/cohort_retention.png)
+
+> Six behavioral cohorts diverge cleanly on retention curves — exactly the kind of signal you'd train churn models on. `LOYAL_HEAVY` stays high, `ONE_SHOT` decays fast, `GROWING` ramps then plateaus.
+
+### Gross margin distribution
+![Gross margin by category](docs/charts/gross_margin.png)
+
+> Margins vary by category in the right shape: refills are highest-margin (consumables), devices lowest (high COGS). Mean margins drift up over time because `standard_cost` is frozen at listing time while `list_price` inflates.
+
+### Promotions & discount patterns
+![Discount activity](docs/charts/promo_lift.png)
+
+> Discount $ given (orange bars) grows with the customer base. Discount-as-% of revenue (blue line) clearly spikes during promo windows — easily 15–20% during Black Friday weeks vs. ~0% baseline.
+
+### Returns
+![Returns share by quarter](docs/charts/returns_over_time.png)
+
+> Returns hold steady around the configured 3% rate (default `--p-return 0.03`). Earlier quarters are noisy due to small N; converges as the customer base grows.
+
+### Customer growth curve
+![Signup growth curve](docs/charts/signup_curve.png)
+
+> Logistic-growth signups (slow start → ramp → plateau) — much more realistic than the uniform-random distribution most generators ship.
+
+### Cohort distribution
+![Cohort distribution](docs/charts/cohort_distribution.png)
+
+> 6 cohorts at the configured weights. Crucially, **a customer's cohort is sticky** across the entire run — same `customer_id` always gets the same cohort, even on re-runs.
+
+### Top SKUs
+![Top 10 products](docs/charts/top_products.png)
+
+> Premium devices and bulk industrial refills dominate revenue, exactly as a real diffuser business would skew. SKU-level analysis is straightforward.
+
+---
+
+## 🗂 Schema (6 CSVs, fully relational)
+
 ```
-sales_lines.invoice_id    → invoice_headers.invoice_id
-sales_lines.product_id    → items.product_id
-invoice_headers.customer_id  → customers.customer_id
-invoice_headers.store_id     → stores.store_id
-invoice_headers.promotion_id → promotions.promotion_id
-invoice_headers.reference_invoice_id → invoice_headers.invoice_id  (returns only)
+                ┌─────────────┐
+                │ promotions  │
+                └──────▲──────┘
+                       │ promotion_id
+                       │
+┌──────────┐   ┌───────┴────────┐    ┌──────────┐
+│ stores   │◄──┤ invoice_headers├───►│customers │
+└──────────┘   └───────▲────────┘    └──────────┘
+   store_id           │ invoice_id     customer_id
+                      │
+                ┌─────┴───────┐    ┌──────────┐
+                │ sales_lines ├───►│  items   │
+                └─────────────┘    └──────────┘
+                                    product_id
 ```
 
----
+| File | Type | Rows | Key fields |
+|---|---|---|---|
+| **`items.csv`** | dim | 98 | `product_id` (PK), `subcategory`, `list_price`, `standard_cost`, `currency`, `listed_from_date`, `compatible_device_brand`, `is_active` |
+| **`customers.csv`** | dim | 1,000 | `customer_id` (PK), demographics (`gender`, `birth_year`, `marital_status`, `occupation`, `yearly_income`, `education`, `num_children`, `house_owner_flag`), geography (`country`, `region`, `city`, `postal_code`), behavior (`cohort`, `price_sensitivity`, `brand_affinity`) |
+| **`stores.csv`** | dim | 8 | `store_id` (PK), `country`, `region`, `city`, `opened_date`, `store_type` |
+| **`promotions.csv`** | dim | 66 | `promotion_id` (PK), `discount_pct`, `category_scope`, `start_date`, `end_date` |
+| **`invoice_headers.csv`** | fact | 54,100 | `invoice_id` (PK), `customer_id`+`store_id`+`promotion_id` (FKs), `order_date`+`ship_date`+`due_date`, `subtotal`, `discount_total`, `tax_amount`, `freight`, `grand_total`, `vat_rate`, `payment_method`, `is_return`, `reference_invoice_id` |
+| **`sales_lines.csv`** | fact | 100,627 | `line_id` (PK), `invoice_id`+`product_id` (FKs), `quantity`, `unit_price`, `discount_pct`, `discount_amount`, `extended_amount`, `line_total`, `unit_standard_cost`, `line_cost`, `gross_margin` |
 
-## Customer behavior model
-
-Each customer is deterministically assigned (by hashing `seed ^ customer_id`) to one of six cohorts:
-
-| Cohort | Buy probability | Lost rate | Refill basket | Notes |
-|---|---|---|---|---|
-| **LOYAL_HEAVY** | 6→10% / day, growing | very low | up to 5 refills | premium-friendly, low price sensitivity |
-| **LOYAL_LIGHT** | 3→5% / day | very low | 1–4 refills | moderate price sensitivity |
-| **GROWING** | 2→8% / day | low | 1–4 refills | new customer ramping up |
-| **DECLINING** | 6→1% / day | medium | smaller baskets | losing interest |
-| **ONE_SHOT** | spike then ~0 | high | small basket | bought once and gone |
-| **CHURN_RISK** | 4→0.5% / day | high | small basket | most price-sensitive |
-
-Cohorts also influence accessory/spare-part attach rates and sticky brand affinity. Daily buy probability is multiplied by `seasonality(date) × (1 - 0.20·price_sensitivity)`.
+The header / line split mirrors AdventureWorks' `SalesOrderHeader / SalesOrderDetail`, with three dates per invoice (order/ship/due), full money decomposition (subtotal → discount → tax → freight → grand_total), and explicit gross-margin tracking on every line.
 
 ---
 
-## Dependencies
-
-* Python 3.10+
-* `pandas`
-* `numpy`
-* `Faker`
+## 🚀 Try it in 30 seconds
 
 ```bash
-pip install pandas numpy Faker
-```
+git clone <this-repo>
+cd erp-synthetic-data-generator
+pip install pandas numpy Faker matplotlib
 
----
-
-## Quick start
-
-```bash
-# See CLI help
-python run.py -h
-
-# Tiny smoke
-python run.py --seed 42 --market us --n-customers 50 \
-              --date-from 2022-01-01 --date-till 2024-12-31 \
-              --out-dir /tmp/synth-smoke
-python scripts/verify.py /tmp/synth-smoke
-
-# Full run (US, 10 years, 1k customers, default seed)
+# Generate a fresh sample (US, 1k customers, 11 years, seed 42)
 python run.py --seed 42 --market us --n-customers 1000 \
               --date-from 2015-01-01 --date-till 2025-12-31
 
-# GCC market
-python run.py --seed 42 --market gcc --n-customers 1000 \
-              --date-from 2018-01-01 --date-till 2024-12-31
+# Verify integrity (schema, FKs, header/line totals reconciliation, ...)
+python scripts/verify.py output_csv
+
+# Render all 9 charts
+python scripts/generate_charts.py output_csv docs/charts
+```
+
+A pre-built **sample dataset** lives in [`output_csv/sample/`](output_csv/sample/) so you can start exploring immediately — no run required.
+
+```python
+import pandas as pd
+df = pd.read_csv("output_csv/sample/sales_lines.csv")
+df.merge(pd.read_csv("output_csv/sample/invoice_headers.csv"), on="invoice_id") \
+  .groupby(pd.to_datetime(df.order_date).dt.to_period("M")).line_total.sum()
 ```
 
 ---
 
-## CLI parameters
-
-### Scale & dates
-* `--n-customers INT` (default `1000`) — primary scale driver.
-* `--date-from YYYY-MM-DD` (default `2015-01-01`) — start of customer creation timeline; also inflation anchor floor.
-* `--date-till YYYY-MM-DD` (default `2025-12-31`) — end of generation timeline.
-
-### Market & realism
-* `--seed INT` (default `42`) — propagated to numpy + python random + Faker; identical seeds → identical output.
-* `--market {us,gcc,eu}` (default `us`) — locale, currency, VAT, holidays, payment methods.
-* `--vat-rate FLOAT` — override market default (US `0.0875`, GCC `0.05`, EU `0.20`).
-* `--currency STR` — override market default.
-* `--annual-inflation FLOAT` — override market default (US `0.03`, GCC/EU `0.025`).
-
-### Items
-* `--n-devices INT` (default `5`)
-* `--n-accessories INT` (default `10`)
-* `--n-spare-parts INT` (default `8`)
-* `--n-refills INT` (default `74`) — regular refills
-* `--n-bulk-refills INT` (default `1`)
-
-### Customer field probabilities
-* `--p-first-name FLOAT` (default `0.95`)
-* `--p-last-name FLOAT` (default `0.85`)
-* `--p-email FLOAT` (default `0.70`)
-* `--p-phone FLOAT` (default `0.80`)
-* `--p-email-opt-in FLOAT` (default `0.60`) — only applied if email exists
-* `--p-sms-opt-in FLOAT` (default `0.90`) — only applied if phone exists
-* `--p-call-opt-in FLOAT` (default `0.75`) — only applied if phone exists
-
-### Stores & promotions
-* `--n-stores INT` (default `8`)
-* `--n-promotions-per-year INT` (default `6`)
-
-### Returns
-* `--p-return FLOAT` (default `0.03`) — probability that any given non-return invoice spawns a linked return
-* `--enable-returns` / `--disable-returns` (default `enable`)
-
-### Output
-* `--out-dir PATH` (default `output_csv`)
-
----
-
-## Verification
-
-`scripts/verify.py` checks an output directory against expected schemas and invariants:
-
-* exact column lists per file
-* sign + range invariants on `quantity`, `unit_price`, `discount_pct`, `gross_margin`
-* foreign-key integrity across all 6 files (no orphans)
-* invoice header reconciliation (`subtotal`, `discount_total`, `grand_total` match line aggregates within ±0.05)
-* return share in [0.5%, 10%]
-* overall gross margin in [10%, 70%]
-* cohort label is stable per customer
+## 🌍 Multi-market support
 
 ```bash
-python scripts/verify.py /path/to/out_dir
+# Middle East: Arabic-locale Faker, AED, 5% VAT, Mada/COD payments,
+# Friday-Saturday weekend, Ramadan + Eid seasonality
+python run.py --seed 42 --market gcc --n-customers 1000
+
+# Continental Europe: German-locale Faker, EUR, 20% VAT, multi-country
+python run.py --seed 42 --market eu --n-customers 1000
 ```
 
-Exits non-zero on the first failure with a descriptive message.
+| Market | Locale | Currency | VAT | Weekend | Big holidays |
+|---|---|---|---|---|---|
+| `us` | `en_US` | USD | 8.75% | Sat/Sun | Black Friday, Cyber Monday, Christmas, July 4 |
+| `gcc` | `ar_AA` | AED | 5% | Fri/Sat | Ramadan, Eid al-Fitr, Eid al-Adha, UAE National Day |
+| `eu` | `de_DE` | EUR | 20% | Sat/Sun | Christmas, Boxing Week, Black Friday |
+
+Override any individual setting with CLI flags (`--vat-rate`, `--currency`, `--annual-inflation`, ...). Lunar calendar dates for Eid are hand-curated 2010–2030.
 
 ---
 
-## Disclaimer
+## 🧬 The customer behavior model
+
+Each customer is permanently assigned to one of 6 cohorts via `random.Random(seed ^ customer_id)` — meaning **the same customer always gets the same cohort across runs.** Each cohort comes with a full behavior preset:
+
+| Cohort | Buy prob (Yr 1→4) | Lost rate / day | Refill basket | Price sensitivity |
+|---|---|---:|---|---:|
+| 🟢 LOYAL_HEAVY (10%) | 6% → 10% | 0.0001 | up to 5 refills | 0.20 |
+| 🟢 LOYAL_LIGHT (20%) | 3% → 5% | 0.0001 | 1–4 refills | 0.40 |
+| 🔵 GROWING (20%) | 2% → 8% | 0.0002 | 1–4 refills | 0.55 |
+| 🟠 DECLINING (20%) | 6% → 1% | 0.0003 | smaller | 0.70 |
+| 🔴 CHURN_RISK (10%) | 4% → 0.5% | 0.0006 | small | 0.90 |
+| ⚪ ONE_SHOT (20%) | spike → 0% | 0.0008 | small | 0.85 |
+
+Daily buy probability is then modulated:
+
+```python
+p_buy_day = clip(
+    cohort.p_buy_by_year[year_idx]            # cohort schedule
+    × month_factor[month]                     # Nov 1.6, Dec 1.8, Jan 0.7, ...
+    × dow_factor[dow]                         # weekend 1.15
+    × holiday_bump(date)                      # Black Friday 2.5, Christmas 1.8, Eid 2.0
+    × (1 - 0.20 × price_sensitivity),         # cautious buyers buy less
+    0, 1
+)
+```
+
+So a `LOYAL_HEAVY` customer on Black Friday in their fourth year buys with `p ≈ 31%`, while the same customer on a Tuesday in February buys with `p ≈ 8%`. The customer also has a sticky `brand_affinity` that filters their product pool toward one device family — so a "FreshNest" customer mostly buys FreshNest-compatible refills.
+
+---
+
+## 🛠 Architecture
+
+```
+src/
+├── rng_utils.py    seeded RNGs (numpy + python random + Faker), threaded everywhere
+├── markets.py      US/GCC/EU presets: locale, currency, VAT, holidays, dow factors
+├── seasonality.py  combined_multiplier(date, market) → float
+├── cohorts.py      6 sticky cohorts, deterministic per (seed, customer_id)
+├── pricing.py      inflation-adjusted unit price + line-level promo discount
+├── stores.py       store master generator
+├── promotions.py   promotion master + precomputed (date, category) lookup
+├── returns.py      negated-quantity return invoices linked via reference_invoice_id
+├── items.py        product universe + sampler with list_price, standard_cost, …
+├── customers.py    demographics, geography, cohort assignment, signup growth curve
+└── sales.py        day-by-day per-customer (headers, lines) generation
+
+scripts/
+├── verify.py           one-command integrity / sanity checks
+└── generate_charts.py  reproducible showcase chart pipeline
+
+run.py                  CLI orchestrator
+```
+
+**Performance notes**:
+- Promotions are precomputed into a `dict[(date_iso, category)] → (promo_id, pct)` once at startup, so the per-line lookup inside the hot loop is O(1) instead of an O(N) pandas filter.
+- Sales output is **streamed** (append per customer) — flat memory regardless of `--n-customers`.
+- Items' `listed_from_date` is parsed to a `date` object once and cached on the items index.
+- Holiday tables are lazy-cached per year per market.
+
+---
+
+## ✅ Verification
+
+`scripts/verify.py` exits non-zero on the first failure and runs:
+
+| Check | What it validates |
+|---|---|
+| **Schema** | Exact column lists per file (drops/renames fail loudly) |
+| **Column invariants** | `quantity` sign matches `is_return`; `unit_price > 0`; `discount_pct ∈ [0, 1]`; `gross_margin == line_total − line_cost` |
+| **Foreign keys** | Every `invoice_id`, `customer_id`, `store_id`, `product_id`, `promotion_id`, `reference_invoice_id` resolves |
+| **Header reconciliation** | For each invoice: `subtotal`, `discount_total`, `grand_total = subtotal − discount + tax + freight` (within ±0.05) |
+| **Aggregate sanity** | Returns share ∈ [0.5%, 10%]; overall gross margin ∈ [10%, 70%] |
+| **Cohort stickiness** | Each customer has exactly one cohort across the whole run |
+
+Sample output on the shipped 1k×11y dataset:
+
+```
+Verifying output_csv/sample/
+  schema: OK
+  column invariants: OK
+  FK integrity: OK
+  totals reconciliation: OK
+  return share: 2.81%
+  overall gross margin: 65.01%
+  cohort stickiness: OK
+ALL CHECKS PASSED
+```
+
+**Reproducibility test:** run twice with the same seed, `sha256sum` matches across all 6 CSVs.
+
+---
+
+## ⚙️ CLI reference
+
+<details>
+<summary><strong>All flags</strong> (click to expand)</summary>
+
+```
+Scale & dates
+  --n-customers INT          number of customers (default 1000)
+  --date-from YYYY-MM-DD     start of customer creation timeline
+  --date-till YYYY-MM-DD     end of generation timeline
+
+Market & realism
+  --seed INT                 master RNG seed (default 42)
+  --market {us,gcc,eu}       locale, currency, VAT, holidays (default us)
+  --vat-rate FLOAT           override market VAT
+  --currency STR             override market currency
+  --annual-inflation FLOAT   override market inflation rate
+
+Items
+  --n-devices INT            (default 5)
+  --n-accessories INT        (default 10)
+  --n-spare-parts INT        (default 8)
+  --n-refills INT            (default 74)
+  --n-bulk-refills INT       (default 1)
+
+Customer fields
+  --p-first-name FLOAT       (default 0.95)
+  --p-last-name FLOAT        (default 0.85)
+  --p-email FLOAT            (default 0.70)
+  --p-phone FLOAT            (default 0.80)
+  --p-email-opt-in FLOAT     (default 0.60, only if email present)
+  --p-sms-opt-in FLOAT       (default 0.90, only if phone present)
+  --p-call-opt-in FLOAT      (default 0.75, only if phone present)
+
+Stores & promotions
+  --n-stores INT             (default 8)
+  --n-promotions-per-year INT (default 6)
+
+Returns
+  --p-return FLOAT           (default 0.03)
+  --enable-returns / --disable-returns
+
+Output
+  --out-dir PATH             (default output_csv)
+```
+
+</details>
+
+---
+
+## 📚 References
+
+This project draws design lessons from:
+
+- **[AdventureWorks](https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure)** (Microsoft) — header / line invoice split, three-date model, slowly-changing product dimensions, rich `DimCustomer` demographics
+- **[RetailSynth](https://arxiv.org/abs/2312.14095)** (RetailMarketingAI) — customer-level latent variables, persistent price sensitivity, multi-stage purchase choice model
+- **["Comprehensive Evaluation of Synthetic Retail Data"](https://arxiv.org/abs/2406.13130)** — fidelity, utility, and privacy benchmarks for synthetic retail datasets
+
+---
+
+## 📜 License
+
+MIT. See [`LICENSE`](LICENSE).
+
+---
+
+## ⚠️ Disclaimer
 
 All data produced by this project is **synthetic** and randomly generated. It does not contain real customer or company information.

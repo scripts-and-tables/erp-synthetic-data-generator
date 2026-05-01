@@ -1,0 +1,9 @@
+store_id,store_name,country,region,city,opened_date,store_type
+101,US-STA-001 Dallas,US,TX,Dallas,2018-03-26,Standard
+102,US-KIO-002 New York,US,NY,New York,2015-01-04,Kiosk
+103,US-KIO-003 Dallas,US,TX,Dallas,2019-02-28,Kiosk
+104,US-STA-004 Houston,US,TX,Houston,2015-05-24,Standard
+105,US-STA-005 Philadelphia,US,PA,Philadelphia,2018-09-20,Standard
+106,US-ONL-006 Boston,US,MA,Boston,2017-11-04,Online
+107,US-STA-007 San Antonio,US,TX,San Antonio,2018-11-28,Standard
+108,US-STA-008 Chicago,US,IL,Chicago,2018-09-23,Standard
