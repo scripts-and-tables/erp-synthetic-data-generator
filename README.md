@@ -353,18 +353,19 @@ CI status appears as the badge at the top of this README.
 
 ### Live showcase site (GitHub Pages)
 
-A self-contained landing page lives at [`docs/index.html`](docs/index.html) — dark-themed, responsive, single-file HTML + CSS that reuses every brand asset (`docs/branding/*`) and chart (`docs/charts/*`).
+A self-contained landing page lives at [`docs/index.html`](docs/index.html) — dark-themed, responsive, single-file HTML + CSS that reuses every brand asset (`docs/branding/*`) and chart (`docs/charts/*`). It's auto-deployed by [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 
-Once GitHub Pages is enabled, the site is served at:
+Once Pages is enabled, the site is served at:
 
 > **<https://scripts-and-tables.github.io/erp-synthetic-data-generator/>**
 
-**One-time enable** (must be done by a repo admin in the GitHub UI):
+**One-time enable** (single click; must be done by a repo admin):
 
-1. Go to the repo on GitHub → **Settings** → **Pages**
-2. Under **Build and deployment** → **Source**, choose **Deploy from a branch**
-3. Set **Branch** to `main` and **Folder** to `/docs`
-4. Save. The page goes live within ~60 seconds at the URL above.
+1. Open <https://github.com/scripts-and-tables/erp-synthetic-data-generator/settings/pages>
+2. Under **Build and deployment** → **Source**, change the dropdown from “Deploy from a branch” to **“GitHub Actions”**
+3. That's it. The deploy workflow is already on `main` — it will run on the next push (or you can trigger it now from the **Actions** tab → **Deploy GitHub Pages** → **Run workflow**)
+
+The first deploy takes ~60 seconds. After it finishes, the URL above is live and re-deploys automatically every time `docs/**` changes.
 
 The [`docs/.nojekyll`](docs/.nojekyll) flag tells Pages to serve the folder as-is (skip Jekyll processing). [`docs/404.html`](docs/404.html) is a friendly fallback that redirects unknown paths back to the home page.
 
