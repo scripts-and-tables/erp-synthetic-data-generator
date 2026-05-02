@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>erp-synth — technical deep dive</title>
+<meta name="description" content="Schema, cohort behavior model, architecture, CLI reference, and academic bibliography for the erp-synth synthetic retail data generator." />
+
+<style>
+:root {
+  --bg:        #08101e;
+  --bg-2:      #0d1830;
+  --bg-card:   #131e36;
+  --bg-soft:   #0e172b;
+  --text:      #f1f5f9;
+  --text-2:    #cbd5e1;
+  --text-dim:  #94a3b8;
+  --text-mute: #64748b;
+  --primary:   #38bdf8;
+  --primary-2: #818cf8;
+  --accent:    #f97316;
+  --accent-2:  #fbbf24;
+  --good:      #22c55e;
+  --bad:       #ef4444;
+  --border:    #1e2a4d;
+  --border-2:  #334155;
+  --max:       1100px;
+  --radius:    12px;
+  --grad-orange: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  --grad-blue:   linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  font-size: 16px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--accent-2); }
+img { max-width: 100%; display: block; }
+code, pre {
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+}
+code {
+  background: var(--bg-soft); border: 1px solid var(--border);
+  padding: 2px 7px; border-radius: 5px; font-size: 0.92em;
+  color: var(--accent-2);
+}
+pre {
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  overflow-x: auto; line-height: 1.55; font-size: 13.5px;
+  color: var(--text-2);
+}
+pre code { background: transparent; border: 0; padding: 0; color: inherit; }
+.container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+hr { border: 0; border-top: 1px solid var(--border); margin: 60px 0; }
+
+/* ===== nav ===== */
+nav.top {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(8, 16, 30, 0.78);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+nav.top .row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; max-width: var(--max); margin: 0 auto;
+}
+nav.top .brand {
+  font-weight: 800; font-size: 16px; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+nav.top .brand .dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--grad-orange);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.7);
+}
+nav.top .brand .crumb { color: var(--text-dim); font-weight: 500; }
+nav.top .links { display: flex; gap: 22px; font-size: 14px; }
+nav.top .links a { color: var(--text-dim); font-weight: 500; }
+nav.top .links a:hover { color: var(--text); }
+nav.top .home {
+  background: var(--bg-card); color: var(--text) !important;
+  padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 13px;
+  border: 1px solid var(--border-2);
+}
+@media (max-width: 760px) { nav.top .links { display: none; } }
+
+/* ===== header / TOC ===== */
+.page-head {
+  padding: 60px 0 30px;
+  background: radial-gradient(70% 50% at 0% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
+}
+.page-head .eyebrow {
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 16px;
+}
+.page-head h1 {
+  font-size: clamp(34px, 4.5vw, 50px); margin: 0 0 18px;
+  letter-spacing: -0.025em; font-weight: 800;
+}
+.page-head .lead {
+  color: var(--text-dim); font-size: 17px; max-width: 700px;
+  margin: 0 0 32px;
+}
+.toc {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+}
+@media (max-width: 700px) { .toc { grid-template-columns: 1fr 1fr; } }
+.toc a {
+  color: var(--text-2); padding: 8px 12px; border-radius: 6px;
+  font-size: 14px; display: block;
+}
+.toc a:hover { background: var(--bg-soft); color: var(--text); }
+.toc a .num { color: var(--text-mute); margin-right: 8px; font-weight: 700; }
+
+/* ===== sections ===== */
+section { padding: 50px 0; }
+section h2 {
+  font-size: clamp(24px, 3vw, 32px); margin: 0 0 12px;
+  letter-spacing: -0.02em; font-weight: 800;
+}
+section .lead {
+  color: var(--text-dim); font-size: 16px; margin: 0 0 32px;
+  max-width: 720px;
+}
+
+/* ===== schema / images ===== */
+.full-image {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.full-image img { width: 100%; }
+
+/* ===== tables ===== */
+table.tbl {
+  width: 100%; border-collapse: collapse; font-size: 14.5px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+table.tbl th, table.tbl td {
+  padding: 11px 14px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+table.tbl th {
+  background: var(--bg-soft); color: var(--text-dim);
+  font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+table.tbl tr:last-child td { border-bottom: 0; }
+table.tbl code { font-size: 12.5px; }
+.cohort-pill {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 700; color: #0a0e1a;
+}
+.c-loyal-h { background: var(--good); }
+.c-loyal-l { background: #34d399; }
+.c-grow    { background: var(--primary); }
+.c-decl    { background: var(--accent); }
+.c-churn   { background: var(--bad); color: #fff; }
+.c-once    { background: var(--text-mute); }
+
+/* ===== charts gallery ===== */
+.charts {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+  margin-top: 24px;
+}
+@media (max-width: 720px) { .charts { grid-template-columns: 1fr; } }
+.chart {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.chart img { width: 100%; background: white; }
+.chart .body { padding: 14px 18px; }
+.chart h4 { margin: 0 0 4px; font-size: 15.5px; }
+.chart p { margin: 0; color: var(--text-dim); font-size: 13.5px; }
+
+/* ===== refs ===== */
+.refs ol { padding-left: 24px; }
+.refs li { margin-bottom: 12px; color: var(--text-dim); font-size: 14.5px; }
+.refs li b { color: var(--text); }
+
+/* ===== mapping table ===== */
+table.map td:first-child { width: 55%; color: var(--text-2); }
+table.map td:last-child  { color: var(--text-dim); }
+
+/* ===== footer ===== */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 0 60px; font-size: 13px; color: var(--text-mute);
+  margin-top: 60px;
+}
+footer .row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="row">
+    <div class="brand"><span class="dot"></span> erp-synth <span class="crumb"> / Technical</span></div>
+    <div class="links">
+      <a href="#schema">Schema</a>
+      <a href="#cohort">Cohorts</a>
+      <a href="#charts">Charts</a>
+      <a href="#cli">CLI</a>
+      <a href="#references">References</a>
+    </div>
+    <a class="home" href="./">← Home</a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <div class="container">
+    <div class="eyebrow">technical deep dive</div>
+    <h1>Schema, models, formulas — and where they come from.</h1>
+    <p class="lead">Every realism axis maps to a published model or a canonical reference. This page documents the schema, the customer behavior formula, the architecture, the full CLI, and the academic bibliography behind each design choice.</p>
+
+    <div class="toc">
+      <a href="#schema"><span class="num">01</span> Schema (9 tables)</a>
+      <a href="#cohort"><span class="num">02</span> Customer behavior model</a>
+      <a href="#design-mapping"><span class="num">03</span> Design → literature mapping</a>
+      <a href="#charts"><span class="num">04</span> Showcase charts</a>
+      <a href="#architecture"><span class="num">05</span> Architecture</a>
+      <a href="#cli"><span class="num">06</span> CLI reference</a>
+      <a href="#references"><span class="num">07</span> Bibliography</a>
+      <a href="REFERENCES.bib"><span class="num">08</span> BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<section id="schema">
+  <div class="container">
+    <h2>Schema — 5 dimensions + 4 facts, fully relational</h2>
+    <p class="lead">Header / line invoice split mirrors AdventureWorks' <code>SalesOrderHeader / SalesOrderDetail</code>, with three dates per invoice (order, ship, due), full money decomposition (subtotal → discount → tax → freight → grand_total), and explicit gross-margin tracking on every line. Plus voice-of-customer extensions: marketing spend, support tickets, NPS surveys.</p>
+
+    <div class="full-image">
+      <img src="branding/schema.png" alt="Schema diagram with items, promotions, customers, stores, invoice_headers, sales_lines and FK arrows" />
+    </div>
+
+    <div style="margin-top:24px;">
+      <table class="tbl">
+        <thead><tr><th>File</th><th>Type</th><th>Sample rows</th><th>Key fields</th></tr></thead>
+        <tbody>
+          <tr><td><code>items.csv</code></td><td>dim</td><td>98</td><td><code>product_id</code>, <code>list_price</code>, <code>standard_cost</code>, <code>subcategory</code></td></tr>
+          <tr><td><code>customers.csv</code></td><td>dim</td><td>1,000</td><td><code>customer_id</code>, demographics, geography, <code>cohort</code>, <code>price_sensitivity</code>, <code>acquisition_channel</code></td></tr>
+          <tr><td><code>stores.csv</code></td><td>dim</td><td>8</td><td><code>store_id</code>, <code>latitude</code>, <code>longitude</code>, <code>store_type</code></td></tr>
+          <tr><td><code>promotions.csv</code></td><td>dim</td><td>66</td><td><code>promotion_id</code>, <code>discount_pct</code>, <code>category_scope</code></td></tr>
+          <tr><td><code>invoice_headers.csv</code></td><td>fact</td><td>54,100</td><td>3 dates, full money decomp, <code>payment_method</code>, <code>is_return</code></td></tr>
+          <tr><td><code>sales_lines.csv</code></td><td>fact</td><td>100,627</td><td><code>quantity</code>, <code>unit_price</code>, <code>discount_pct</code>, <code>line_total</code>, <code>gross_margin</code></td></tr>
+          <tr><td><code>marketing_spend.csv</code></td><td>fact</td><td>792</td><td>per-month-per-channel spend with holiday boost</td></tr>
+          <tr><td><code>support_tickets.csv</code></td><td>fact</td><td>284</td><td><code>category</code>, <code>priority</code>, resolution time, <code>csat_score</code></td></tr>
+          <tr><td><code>nps_surveys.csv</code></td><td>fact</td><td>2,765</td><td>quarterly survey, ~55% response, score 0–10</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<section id="cohort">
+  <div class="container">
+    <h2>The customer behavior model</h2>
+    <p class="lead">Each customer is permanently assigned to one of six cohorts via <code>random.Random(seed ^ customer_id)</code> — meaning the same customer always gets the same cohort across runs. Daily buy probability is then modulated by seasonality, day-of-week, holiday bumps, and the customer's price sensitivity.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Cohort</th><th>Buy prob (Yr 1→4)</th><th>Lost / day</th><th>Refill basket</th><th>Price sens.</th></tr></thead>
+      <tbody>
+        <tr><td><span class="cohort-pill c-loyal-h">LOYAL_HEAVY</span> (10%)</td><td>6% → 10%</td><td>0.0001</td><td>up to 5 refills</td><td>0.20</td></tr>
+        <tr><td><span class="cohort-pill c-loyal-l">LOYAL_LIGHT</span> (20%)</td><td>3% → 5%</td><td>0.0001</td><td>1–4 refills</td><td>0.40</td></tr>
+        <tr><td><span class="cohort-pill c-grow">GROWING</span> (20%)</td><td>2% → 8%</td><td>0.0002</td><td>1–4 refills</td><td>0.55</td></tr>
+        <tr><td><span class="cohort-pill c-decl">DECLINING</span> (20%)</td><td>6% → 1%</td><td>0.0003</td><td>smaller</td><td>0.70</td></tr>
+        <tr><td><span class="cohort-pill c-churn">CHURN_RISK</span> (10%)</td><td>4% → 0.5%</td><td>0.0006</td><td>small</td><td>0.90</td></tr>
+        <tr><td><span class="cohort-pill c-once">ONE_SHOT</span> (20%)</td><td>spike → 0%</td><td>0.0008</td><td>small</td><td>0.85</td></tr>
+      </tbody>
+    </table>
+
+<pre style="margin-top:22px;"><code>p_buy_day = clip(
+    cohort.p_buy_by_year[year_idx]            # cohort schedule
+    × month_factor[month]                     # Nov 1.6, Dec 1.8, Jan 0.7, ...
+    × dow_factor[dow]                         # weekend 1.15
+    × holiday_bump(date)                      # Black Friday 2.5, Christmas 1.8, Eid 2.0
+    × (1 - 0.20 × price_sensitivity),
+    0, 1
+)</code></pre>
+
+    <p style="color:var(--text-dim); margin-top:14px; font-size:14.5px;">
+      So a <code>LOYAL_HEAVY</code> customer on Black Friday in their fourth year buys with <b>p ≈ 31%</b>, while the same customer on a Tuesday in February buys with <b>p ≈ 8%</b>. The customer also has a sticky <code>brand_affinity</code> that filters their product pool toward one device family.
+    </p>
+
+    <h3 style="margin-top:36px;">Theoretical foundations</h3>
+    <p style="color:var(--text-dim); font-size:14.5px;">
+      The cohort + lost-decision-date structure is a discrete-time analogue of the <b>buy-till-you-die</b> customer-base models of Fader, Hardie &amp; Lee (BG/NBD) <a href="#references">[4]</a> and their generalizations to non-contractual settings <a href="#references">[5, 10]</a> — every customer has a constant per-period probability of "dying" (becoming permanently lost) and an independent per-period probability of buying while alive. We replace their continuous-time gamma/beta mixtures with a discrete library of six cohort presets so the dataset is parameterizable by hand and inspectable line-by-line.
+    </p>
+    <p style="color:var(--text-dim); font-size:14.5px;">
+      The per-customer × per-product <b>price sensitivity</b> and <b>brand affinity</b> modulation comes from the multi-stage discrete-choice formulation in RetailSynth <a href="#references">[2]</a>, itself rooted in McFadden's conditional logit / mixed logit framework <a href="#references">[6, 7]</a> — the framework that earned the 2000 Nobel Prize in Economics for "the development of theory and methods of analyzing discrete choice" <a href="#references">[8]</a>.
+    </p>
+    <p style="color:var(--text-dim); font-size:14.5px;">
+      The fidelity / utility / cohort-stickiness checks in <code>scripts/verify.py</code> follow the comprehensive evaluation framework for synthetic retail data proposed by Xia et al. <a href="#references">[3]</a>.
+    </p>
+  </div>
+</section>
+
+<hr>
+
+<section id="design-mapping">
+  <div class="container">
+    <h2>Design choice → literature</h2>
+    <p class="lead">Each architectural decision in <code>erp-synth</code> traces to a specific paper or canonical reference. The mapping is summarized below; full bibliography <a href="#references">in section 7</a>.</p>
+
+    <table class="tbl map">
+      <thead><tr><th>Design choice</th><th>Anchored in</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Star-schema split into <code>invoice_headers</code> + <code>sales_lines</code>; three dates per invoice; rich <code>DimCustomer</code> demographics</td>
+          <td>AdventureWorks <a href="#references">[1]</a></td>
+        </tr>
+        <tr>
+          <td>Customer-level latent variables (<code>price_sensitivity</code>, <code>brand_affinity</code>); discount-aware multi-stage purchase model</td>
+          <td>RetailSynth (Xia et al. 2023) <a href="#references">[2]</a></td>
+        </tr>
+        <tr>
+          <td>Choice of fidelity / utility / cohort-stickiness checks in <code>verify.py</code></td>
+          <td>Comprehensive Evaluation of Synthetic Retail Data (Xia et al. 2024) <a href="#references">[3]</a></td>
+        </tr>
+        <tr>
+          <td>Six "buy-till-you-die" cohorts with sticky lost-decision date and decaying yearly buy probability</td>
+          <td>BG/NBD and Pareto/NBD models (Fader et al. 2005, 2009) <a href="#references">[4, 5]</a></td>
+        </tr>
+        <tr>
+          <td>Per-customer × per-product price sensitivity → product choice; market-aware payment-method weighting</td>
+          <td>McFadden conditional / mixed logit (1974, 2000), Nobel lecture (2001) <a href="#references">[6, 7, 8]</a></td>
+        </tr>
+        <tr>
+          <td>Reproducibility-first generator — single <code>--seed</code> propagates to every RNG</td>
+          <td>Faker <a href="#references">[9]</a> + numpy + Python <code>random</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<section id="charts">
+  <div class="container">
+    <h2>Showcase charts</h2>
+    <p class="lead">All charts produced by <code>scripts/generate_charts.py</code> from the shipped 1,000-customer × 11-year sample (seed 42). Run with any seed to regenerate.</p>
+
+    <div class="charts">
+      <div class="chart"><img src="charts/monthly_revenue.png" alt="Monthly revenue across 11 years" /><div class="body"><h4>Monthly revenue (11 years)</h4><p>Recurring November / December spikes; customer-base ramp visible end-to-end.</p></div></div>
+      <div class="chart"><img src="charts/holiday_spikes_2023.png" alt="Daily revenue 2023 with holidays marked" /><div class="body"><h4>Daily holiday spikes (2023)</h4><p>Black Friday, Cyber Monday, Christmas Eve, July 4 — annotated.</p></div></div>
+      <div class="chart"><img src="charts/cohort_retention.png" alt="Cohort retention curves by cohort" /><div class="body"><h4>Cohort retention</h4><p>Six behavioral cohorts diverge cleanly on retention curves.</p></div></div>
+      <div class="chart"><img src="charts/gross_margin.png" alt="Gross margin distribution" /><div class="body"><h4>Gross margin distribution</h4><p>Refills highest-margin (consumables), devices lowest. Mean drifts up over time as inflation outpaces frozen <code>standard_cost</code>.</p></div></div>
+      <div class="chart"><img src="charts/promo_lift.png" alt="Discount activity over time" /><div class="body"><h4>Promotion activity</h4><p>Discount-as-% of revenue spikes 15–20% during Black Friday weeks vs. ~0% baseline.</p></div></div>
+      <div class="chart"><img src="charts/returns_over_time.png" alt="Returns share by quarter" /><div class="body"><h4>Returns share</h4><p>Holds steady around the configured 3% rate. Earlier quarters noisier due to small N.</p></div></div>
+      <div class="chart"><img src="charts/signup_curve.png" alt="Cumulative signups logistic curve" /><div class="body"><h4>Logistic-growth signups</h4><p>Slow start → ramp → plateau, replacing the uniform-random distribution most generators ship.</p></div></div>
+      <div class="chart"><img src="charts/cohort_distribution.png" alt="Customer cohort distribution" /><div class="body"><h4>Cohort distribution</h4><p>Six cohorts at the configured weights. Sticky per <code>(seed, customer_id)</code>.</p></div></div>
+      <div class="chart"><img src="charts/top_products.png" alt="Top 10 products by revenue" /><div class="body"><h4>Top SKUs</h4><p>Premium devices and bulk industrial refills dominate revenue.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<section id="architecture">
+  <div class="container">
+    <h2>Architecture</h2>
+    <p class="lead">The package is organized around small, single-responsibility modules under <code>erp_synth/</code>. All RNG state flows through a single seed.</p>
+<pre><code>erp_synth/
+├── rng_utils.py    seeded RNGs (numpy + python random + Faker), threaded everywhere
+├── markets.py      US / GCC / EU presets: locale, currency, VAT, holidays, dow factors
+├── seasonality.py  combined_multiplier(date, market) → float
+├── cohorts.py      6 sticky cohorts, deterministic per (seed, customer_id)
+├── pricing.py      inflation-adjusted unit price + line-level promo discount
+├── stores.py       store master generator (with lat/lon)
+├── promotions.py   promotion master + precomputed (date, category) lookup
+├── returns.py      negated-quantity return invoices linked via reference_invoice_id
+├── marketing.py    per-month-per-channel spend with holiday boost
+├── support.py      support tickets + NPS surveys gated by cohort propensity
+├── items.py        product universe + sampler
+├── customers.py    demographics, geography, cohort assignment, signup growth curve
+└── sales.py        day-by-day per-customer (headers, lines) generation
+
+scripts/
+├── verify.py               schema + invariants + FK + reconciliation checks
+├── generate_charts.py      reproducible chart pipeline (matplotlib)
+├── generate_branding.py    hero, stats, schema, features, phone dashboards
+└── generate_animations.py  the data_unfolds.gif animation
+
+run.py                       CLI orchestrator → erp-synth console script
+tests/                       111 tests across 12 files
+.github/workflows/ci.yml     lint + tests + smoke + reproducibility check</code></pre>
+
+    <p style="color:var(--text-dim); font-size:14.5px; margin-top:18px;">
+      <b>Performance notes:</b> Promotions are precomputed into a <code>dict[(date_iso, category)] → (promo_id, pct)</code> at startup so the per-line lookup inside the hot loop is O(1) instead of an O(N) pandas filter. Sales output is streamed (append per customer), keeping memory flat regardless of <code>--n-customers</code>. Items' <code>listed_from_date</code> is parsed once and cached. Holiday tables are lazy-cached per year per market.
+    </p>
+  </div>
+</section>
+
+<hr>
+
+<section id="cli">
+  <div class="container">
+    <h2>CLI reference</h2>
+    <p class="lead">After <code>pip install -e .</code>, the <code>erp-synth</code> console script is on PATH. It accepts the following flags:</p>
+
+<pre><code>Scale &amp; dates
+  --n-customers INT          number of customers (default 1000)
+  --date-from YYYY-MM-DD     start of customer creation timeline
+  --date-till YYYY-MM-DD     end of generation timeline
+
+Market &amp; realism
+  --seed INT                 master RNG seed (default 42)
+  --market {us,gcc,eu}       locale, currency, VAT, holidays (default us)
+  --vat-rate FLOAT           override market VAT
+  --currency STR             override market currency
+  --annual-inflation FLOAT   override market inflation rate
+
+Items
+  --n-devices INT            (default 5)
+  --n-accessories INT        (default 10)
+  --n-spare-parts INT        (default 8)
+  --n-refills INT            (default 74)
+  --n-bulk-refills INT       (default 1)
+
+Customer fields
+  --p-first-name FLOAT       (default 0.95)
+  --p-last-name FLOAT        (default 0.85)
+  --p-email FLOAT            (default 0.70)
+  --p-phone FLOAT            (default 0.80)
+  --p-email-opt-in FLOAT     (default 0.60, only if email present)
+  --p-sms-opt-in FLOAT       (default 0.90, only if phone present)
+  --p-call-opt-in FLOAT      (default 0.75, only if phone present)
+
+Stores &amp; promotions
+  --n-stores INT             (default 8)
+  --n-promotions-per-year INT (default 6)
+
+Returns
+  --p-return FLOAT           (default 0.03)
+  --enable-returns / --disable-returns
+
+Output
+  --out-dir PATH             (default output_csv)</code></pre>
+  </div>
+</section>
+
+<hr>
+
+<section id="references" class="refs">
+  <div class="container">
+    <h2>Bibliography</h2>
+    <p class="lead">BibTeX for every entry: <a href="REFERENCES.bib"><code>docs/REFERENCES.bib</code></a>.</p>
+    <ol>
+      <li><b>Microsoft.</b> <i>AdventureWorks Sample Databases.</i> SQL Server documentation. <a href="https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure">link</a></li>
+      <li><b>Xia, Y., Arian, A., Narayanamoorthy, S., &amp; Mabry, J.</b> (2023). <i>RetailSynth: Synthetic Data Generation for Retail AI Systems Evaluation.</i> arXiv:2312.14095. <a href="https://arxiv.org/abs/2312.14095">link</a></li>
+      <li><b>Xia, Y., Wang, C.-H., Mabry, J., &amp; Cheng, G.</b> (2024). <i>Advancing Retail Data Science: Comprehensive Evaluation of Synthetic Data.</i> arXiv:2406.13130. <a href="https://arxiv.org/abs/2406.13130">link</a></li>
+      <li><b>Fader, P. S., Hardie, B. G. S., &amp; Lee, K. L.</b> (2005). <i>"Counting Your Customers" the Easy Way: An Alternative to the Pareto/NBD Model.</i> Marketing Science, 24(2), 275–284. <a href="https://www.brucehardie.com/papers/bgnbd_2004-04-20.pdf">PDF</a></li>
+      <li><b>Fader, P. S., &amp; Hardie, B. G. S.</b> (2009). <i>Probability Models for Customer-Base Analysis.</i> Journal of Interactive Marketing, 23(1), 61–69. <a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Fader_hardie_jim_09.pdf">PDF</a></li>
+      <li><b>McFadden, D.</b> (1974). <i>Conditional Logit Analysis of Qualitative Choice Behavior.</i> Frontiers in Econometrics. <a href="https://eml.berkeley.edu/reprints/mcfadden/zarembka.pdf">PDF</a></li>
+      <li><b>McFadden, D., &amp; Train, K.</b> (2000). <i>Mixed MNL Models for Discrete Response.</i> Journal of Applied Econometrics, 15(5), 447–470. <a href="https://pages.stern.nyu.edu/~wgreene/DiscreteChoice/Readings/McFadden-Train.pdf">PDF</a></li>
+      <li><b>McFadden, D.</b> (2001). <i>Economic Choices.</i> Nobel Lecture. <a href="https://eml.berkeley.edu/~mcfadden/nobel/final-nobel.pdf">PDF</a></li>
+      <li><b>Faraglia, D. and others.</b> <i>Faker: Python package for fake data generation.</i> <a href="https://faker.readthedocs.io/">link</a></li>
+      <li><b>Fader, P. S., Hardie, B. G. S., &amp; Shang, J.</b> (2010). <i>Customer-Base Analysis in a Discrete-Time Noncontractual Setting.</i> Marketing Science, 29(6), 1086–1108. <a href="https://www.brucehardie.com/papers/020/fader_et_al_mksc_10.pdf">PDF</a></li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <div class="container row">
+    <div>← <a href="./">Back to home</a></div>
+    <div>Built on pandas · numpy · Faker · matplotlib · <a href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">GitHub</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

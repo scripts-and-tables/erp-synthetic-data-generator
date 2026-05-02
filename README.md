@@ -3,7 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>🌐 <a href="https://scripts-and-tables.github.io/erp-synthetic-data-generator/">Live showcase site</a></strong> &nbsp;·&nbsp;
+  <strong>🌐 <a href="https://scripts-and-tables.github.io/erp-synthetic-data-generator/">Live showcase</a></strong> &nbsp;·&nbsp;
+  <a href="https://scripts-and-tables.github.io/erp-synthetic-data-generator/technical.html">Technical deep dive</a> &nbsp;·&nbsp;
   <a href="#try-it-in-30-seconds">Quick start</a> &nbsp;·&nbsp;
   <a href="#references">References</a>
 </p>

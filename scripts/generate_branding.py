@@ -477,6 +477,161 @@ def chart_features(out: Path) -> None:
     plt.close(fig)
 
 
+def chart_phone_revenue(out: Path, sample_dir: Path) -> None:
+    """Portrait dashboard: monthly revenue with holiday spikes + KPI."""
+    headers = pd.read_csv(sample_dir / "invoice_headers.csv",
+                          parse_dates=["order_date"])
+    pos = headers[headers.is_return == 0].copy()
+    pos["ym"] = pos["order_date"].dt.to_period("M").dt.to_timestamp()
+    monthly = pos.groupby("ym")["grand_total"].sum().reset_index()
+    last_year = monthly.tail(12)
+    last_total = last_year["grand_total"].sum()
+    prev_total = monthly.iloc[-24:-12]["grand_total"].sum()
+    yoy = (last_total - prev_total) / prev_total * 100 if prev_total > 0 else 0
+
+    fig = plt.figure(figsize=(4.0, 6.0), dpi=140)
+    fig.patch.set_facecolor(BRAND["bg_top"])
+    fig.text(0.08, 0.93, "SALES PULSE", fontsize=10, color=BRAND["text_dim"],
+             fontweight="bold")
+    fig.text(0.08, 0.88, "Last 12 months", fontsize=12, color=BRAND["text"])
+    fig.text(0.08, 0.79, f"${last_total / 1e6:.2f}M", fontsize=32,
+             fontweight="bold", color=BRAND["text"])
+    yoy_color = BRAND["good"] if yoy >= 0 else BRAND["bad"]
+    yoy_str = f"▲ {yoy:.1f}% YoY" if yoy >= 0 else f"▼ {abs(yoy):.1f}% YoY"
+    fig.text(0.08, 0.74, yoy_str, fontsize=11, color=yoy_color,
+             fontweight="bold")
+
+    ax = fig.add_axes([0.10, 0.20, 0.84, 0.45])
+    ax.set_facecolor("#101a30")
+    ax.plot(monthly["ym"], monthly["grand_total"] / 1000,
+            color=BRAND["accent"], linewidth=1.6)
+    ax.fill_between(monthly["ym"], 0, monthly["grand_total"] / 1000,
+                    color=BRAND["accent"], alpha=0.20)
+    spikes = monthly[monthly["ym"].dt.month.isin([11, 12])]
+    ax.scatter(spikes["ym"], spikes["grand_total"] / 1000,
+               color=BRAND["accent_2"], s=14, zorder=5)
+    ax.tick_params(axis="x", labelsize=8, colors=BRAND["text_dim"])
+    ax.tick_params(axis="y", labelsize=8, colors=BRAND["text_dim"])
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color(BRAND["card_border"])
+    ax.spines["bottom"].set_color(BRAND["card_border"])
+    ax.grid(axis="y", alpha=0.12, color=BRAND["text_dim"])
+
+    fig.text(0.08, 0.10, "Holiday spikes",
+             fontsize=10, color=BRAND["text_dim"], fontweight="bold")
+    fig.text(0.08, 0.06, "Nov / Dec consistently 2–3× baseline, every year.",
+             fontsize=9, color=BRAND["text_dim"])
+
+    fig.savefig(out / "phone_revenue.png", facecolor=BRAND["bg_top"])
+    plt.close(fig)
+
+
+def chart_phone_cohorts(out: Path, sample_dir: Path) -> None:
+    """Portrait dashboard: cohort distribution with retention pills."""
+    customers = pd.read_csv(sample_dir / "customers.csv")
+    counts = customers["cohort"].value_counts()
+    order = ["LOYAL_HEAVY", "LOYAL_LIGHT", "GROWING", "DECLINING",
+             "CHURN_RISK", "ONE_SHOT"]
+    counts = counts.reindex([c for c in order if c in counts.index])
+    color_for = {
+        "LOYAL_HEAVY": BRAND["good"], "LOYAL_LIGHT": "#34d399",
+        "GROWING": BRAND["primary"], "DECLINING": BRAND["accent"],
+        "CHURN_RISK": BRAND["bad"], "ONE_SHOT": BRAND["muted"],
+    }
+
+    fig = plt.figure(figsize=(4.0, 6.0), dpi=140)
+    fig.patch.set_facecolor(BRAND["bg_top"])
+    fig.text(0.08, 0.93, "COHORT HEALTH", fontsize=10, color=BRAND["text_dim"],
+             fontweight="bold")
+    fig.text(0.08, 0.88, "All customers, all-time", fontsize=12,
+             color=BRAND["text"])
+    fig.text(0.08, 0.79, f"{counts.sum():,}", fontsize=32, fontweight="bold",
+             color=BRAND["text"])
+    fig.text(0.08, 0.74, "across 6 behavioral segments",
+             fontsize=10, color=BRAND["text_dim"])
+
+    ax = fig.add_axes([0.10, 0.16, 0.84, 0.50])
+    ax.set_facecolor("#101a30")
+    y_pos = np.arange(len(counts))[::-1]
+    bars = ax.barh(y_pos, counts.values,
+                   color=[color_for[c] for c in counts.index],
+                   alpha=0.92, height=0.65)
+    for bar, name, val in zip(bars, counts.index, counts.values):
+        ax.text(val + counts.max() * 0.03, bar.get_y() + bar.get_height() / 2,
+                f"{val}", va="center", color=BRAND["text"],
+                fontsize=9, fontweight="bold")
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(counts.index, color=BRAND["text"], fontsize=9)
+    ax.set_xticks([])
+    for s in ax.spines.values():
+        s.set_visible(False)
+
+    fig.text(0.08, 0.06, "Sticky cohort assignment via seed ⊕ customer_id.",
+             fontsize=9, color=BRAND["text_dim"])
+
+    fig.savefig(out / "phone_cohorts.png", facecolor=BRAND["bg_top"])
+    plt.close(fig)
+
+
+def chart_phone_markets(out: Path) -> None:
+    """Portrait dashboard: 3 markets with currency / VAT / weekend."""
+    markets = [
+        ("US",  "USD",  "8.75%", "Sat / Sun", BRAND["primary"], "Black Friday"),
+        ("GCC", "AED",  "5.0%",  "Fri / Sat", BRAND["accent_2"], "Ramadan + Eid"),
+        ("EU",  "EUR",  "20%",   "Sat / Sun", BRAND["primary_2"], "Boxing Week"),
+    ]
+    fig = plt.figure(figsize=(4.0, 6.0), dpi=140)
+    fig.patch.set_facecolor(BRAND["bg_top"])
+    fig.text(0.08, 0.93, "MARKETS", fontsize=10, color=BRAND["text_dim"],
+             fontweight="bold")
+    fig.text(0.08, 0.88, "Out of the box", fontsize=12, color=BRAND["text"])
+    fig.text(0.08, 0.79, "3", fontsize=44, fontweight="bold", color=BRAND["text"])
+    fig.text(0.08, 0.74, "preset markets · fully overridable",
+             fontsize=10, color=BRAND["text_dim"])
+
+    ax = fig.add_axes([0.0, 0.0, 1.0, 1.0])
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    y_top = 0.66
+    row_h = 0.13
+    for i, (name, currency, vat, weekend, color, holidays) in enumerate(markets):
+        y = y_top - i * row_h
+        card = patches.FancyBboxPatch(
+            (0.08, y - row_h * 0.85), 0.84, row_h * 0.80,
+            boxstyle="round,pad=0,rounding_size=0.015",
+            facecolor=BRAND["card_bg"], edgecolor=BRAND["card_border"],
+            linewidth=1, transform=ax.transAxes,
+        )
+        ax.add_patch(card)
+        # accent stripe
+        stripe = patches.FancyBboxPatch(
+            (0.08, y - row_h * 0.85), 0.018, row_h * 0.80,
+            boxstyle="round,pad=0,rounding_size=0.005",
+            facecolor=color, edgecolor="none", transform=ax.transAxes,
+        )
+        ax.add_patch(stripe)
+        ax.text(0.13, y - 0.025, name, fontsize=14, fontweight="bold",
+                color=BRAND["text"], transform=ax.transAxes, va="center")
+        ax.text(0.30, y - 0.020, f"{currency} · VAT {vat}",
+                fontsize=9, color=BRAND["text_dim"], transform=ax.transAxes,
+                va="center")
+        ax.text(0.30, y - 0.050, f"weekend {weekend}",
+                fontsize=8, color=BRAND["text_dim"], transform=ax.transAxes,
+                va="center")
+        ax.text(0.62, y - 0.035, holidays, fontsize=8.5,
+                color=color, transform=ax.transAxes, va="center",
+                fontweight="bold")
+
+    fig.text(0.08, 0.06, "Locale, currency, VAT, weekend, holidays",
+             fontsize=9, color=BRAND["text_dim"])
+
+    fig.savefig(out / "phone_markets.png", facecolor=BRAND["bg_top"])
+    plt.close(fig)
+
+
 def main(out_dir: str = "docs/branding",
          sample_dir: str = "output_csv/sample") -> int:
     out = Path(out_dir)
@@ -484,10 +639,13 @@ def main(out_dir: str = "docs/branding",
     sample = Path(sample_dir)
 
     print(f"writing branding assets to {out}/")
-    chart_hero(out, sample);          print("  ✓ hero.png")
-    chart_stats_strip(out, sample);   print("  ✓ stats_strip.png")
-    chart_schema(out);                print("  ✓ schema.png")
-    chart_features(out);              print("  ✓ features.png")
+    chart_hero(out, sample);            print("  ✓ hero.png")
+    chart_stats_strip(out, sample);     print("  ✓ stats_strip.png")
+    chart_schema(out);                  print("  ✓ schema.png")
+    chart_features(out);                print("  ✓ features.png")
+    chart_phone_revenue(out, sample);   print("  ✓ phone_revenue.png")
+    chart_phone_cohorts(out, sample);   print("  ✓ phone_cohorts.png")
+    chart_phone_markets(out);           print("  ✓ phone_markets.png")
     print("done")
     return 0
 

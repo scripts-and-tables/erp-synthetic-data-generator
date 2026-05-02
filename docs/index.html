@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ERP Synthetic Data Generator — realistic, multi-year retail data from one Python command</title>
-<meta name="description" content="A configurable Python generator that produces AdventureWorks-style multi-year retail data with cohorts, seasonality, promotions, returns, multi-market support, and 100% reproducibility from a seed." />
-<meta property="og:title" content="ERP Synthetic Data Generator" />
-<meta property="og:description" content="Realistic, multi-year retail data from one Python command. AdventureWorks-style schema, RetailSynth-grade cohort behavior, fully reproducible." />
+<title>erp-synth — synthetic retail data that feels real</title>
+<meta name="description" content="Realistic, multi-year retail datasets from a single Python command. Cohort behavior anchored in Nobel-winning discrete choice theory, AdventureWorks-style schema, multi-market, fully reproducible." />
+<meta property="og:title" content="erp-synth — synthetic retail data that feels real" />
+<meta property="og:description" content="Generate 100,000+ rows of realistic retail data across 9 relational tables in 70 seconds. Scientifically grounded, fully customizable, byte-reproducible." />
 <meta property="og:image" content="branding/hero.png" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <style>
 :root {
-  --bg:        #0b1220;
-  --bg-panel:  #1e293b;
-  --bg-soft:   #101a30;
-  --text:      #e2e8f0;
+  --bg:        #08101e;
+  --bg-2:      #0d1830;
+  --bg-card:   #131e36;
+  --bg-soft:   #0e172b;
+  --text:      #f1f5f9;
+  --text-2:    #cbd5e1;
   --text-dim:  #94a3b8;
   --text-mute: #64748b;
   --primary:   #38bdf8;
@@ -25,9 +27,12 @@
   --accent-2:  #fbbf24;
   --good:      #22c55e;
   --bad:       #ef4444;
-  --border:    #334155;
-  --max:       1180px;
-  --radius:    10px;
+  --border:    #1e2a4d;
+  --border-2:  #334155;
+  --max:       1200px;
+  --radius:    14px;
+  --grad-orange: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  --grad-blue:   linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -35,559 +40,647 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-               Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+               "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 a { color: var(--primary); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a:hover { color: var(--accent-2); }
 img { max-width: 100%; display: block; }
 code, pre, .mono {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", "SF Mono", Menlo, monospace;
 }
 code {
   background: var(--bg-soft);
   border: 1px solid var(--border);
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
   font-size: 0.92em;
+  color: var(--accent-2);
 }
 pre {
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 18px 20px;
   overflow-x: auto;
   line-height: 1.55;
   font-size: 13.5px;
+  color: var(--text-2);
 }
-pre code { background: transparent; border: 0; padding: 0; }
+pre code { background: transparent; border: 0; padding: 0; color: inherit; }
 .container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
 
-/* Top nav */
+/* ========== NAV ========== */
 nav.top {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(11, 18, 32, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(8, 16, 30, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
 }
 nav.top .row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 24px; max-width: var(--max); margin: 0 auto;
+  padding: 14px 24px; max-width: var(--max); margin: 0 auto;
 }
 nav.top .brand {
-  font-weight: 700; font-size: 15px; color: var(--text);
-  display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 16px; color: var(--text);
+  display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
 }
 nav.top .brand .dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--grad-orange);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.7);
 }
-nav.top .links { display: flex; gap: 22px; font-size: 14px; }
-nav.top .links a { color: var(--text-dim); }
-nav.top .links a:hover { color: var(--text); text-decoration: none; }
+nav.top .links { display: flex; gap: 26px; font-size: 14px; }
+nav.top .links a { color: var(--text-dim); font-weight: 500; }
+nav.top .links a:hover { color: var(--text); }
 nav.top .cta {
-  background: var(--accent); color: #0b1220 !important;
-  padding: 7px 14px; border-radius: 6px; font-weight: 600;
-  font-size: 14px;
+  background: var(--grad-orange); color: #0a0e1a !important;
+  padding: 8px 16px; border-radius: 8px; font-weight: 700;
+  font-size: 14px; transition: transform 0.15s, box-shadow 0.15s;
 }
-nav.top .cta:hover { background: var(--accent-2); text-decoration: none; }
-@media (max-width: 720px) { nav.top .links { display: none; } }
+nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rgba(249, 115, 22, 0.6); }
+@media (max-width: 760px) { nav.top .links { display: none; } }
 
-/* Hero */
+/* ========== HERO ========== */
 .hero {
-  padding: 56px 0 40px;
+  position: relative;
+  padding: 80px 0 60px;
+  overflow: hidden;
   background:
-    radial-gradient(ellipse at top right, rgba(56, 189, 248, 0.10), transparent 55%),
-    radial-gradient(ellipse at bottom left, rgba(249, 115, 22, 0.08), transparent 55%);
+    radial-gradient(60% 50% at 20% 0%, rgba(56, 189, 248, 0.10), transparent 70%),
+    radial-gradient(50% 50% at 90% 30%, rgba(249, 115, 22, 0.10), transparent 70%);
+}
+.hero::before {
+  /* subtle grid */
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.06; pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.hero .pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(56, 189, 248, 0.10);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: var(--primary);
+  font-size: 13px; font-weight: 600;
+  margin-bottom: 22px;
+}
+.hero .pill .new {
+  background: var(--grad-orange); color: #0a0e1a;
+  padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800;
 }
 .hero h1 {
-  font-size: clamp(36px, 5vw, 60px);
-  line-height: 1.05;
-  margin: 0 0 18px;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, var(--text) 30%, var(--primary) 90%);
+  font-size: clamp(40px, 6.5vw, 72px);
+  line-height: 1.04;
+  margin: 0 0 22px;
+  letter-spacing: -0.025em;
+  font-weight: 800;
+  max-width: 900px;
+}
+.hero h1 .grad {
+  background: var(--grad-orange);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.hero p.tagline {
-  font-size: clamp(16px, 1.6vw, 19px);
-  color: var(--text-dim);
-  margin: 0 0 28px;
-  max-width: 720px;
+.hero .tagline {
+  font-size: clamp(17px, 1.7vw, 21px);
+  color: var(--text-2);
+  margin: 0 0 36px;
+  max-width: 780px;
+  line-height: 1.55;
 }
-.hero .badges {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
-}
-.hero .badges img { height: 22px; }
-.hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero .ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 38px; }
 .hero .ctas a {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 11px 22px; border-radius: 8px; font-weight: 600;
-  font-size: 15px; transition: transform 0.1s ease, background 0.15s ease;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 14px 26px; border-radius: 10px; font-weight: 700;
+  font-size: 15px; transition: transform 0.15s, box-shadow 0.15s;
 }
-.hero .ctas a:hover { text-decoration: none; transform: translateY(-1px); }
+.hero .ctas a:hover { transform: translateY(-2px); }
 .hero .ctas .primary {
-  background: var(--accent); color: #0b1220;
+  background: var(--grad-orange); color: #0a0e1a;
+  box-shadow: 0 12px 32px -10px rgba(249, 115, 22, 0.5);
 }
-.hero .ctas .primary:hover { background: var(--accent-2); }
+.hero .ctas .primary:hover { box-shadow: 0 18px 44px -12px rgba(249, 115, 22, 0.65); }
 .hero .ctas .secondary {
-  background: transparent; color: var(--text);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04); color: var(--text);
+  border: 1px solid var(--border-2);
 }
-.hero .ctas .secondary:hover { background: var(--bg-panel); border-color: var(--text-mute); }
+.hero .ctas .secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--text-mute); }
+.hero .install-line {
+  font-size: 13px; color: var(--text-dim);
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--bg-soft); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: 8px;
+  font-family: ui-monospace, monospace;
+}
+.hero .install-line .prompt { color: var(--accent); user-select: none; }
 
-/* Generic section */
-section { padding: 56px 0; border-top: 1px solid var(--border); }
-section h2 {
-  font-size: clamp(24px, 3vw, 32px);
-  margin: 0 0 8px;
-  letter-spacing: -0.01em;
+/* ========== DEVICES (browser frame + 3 phones) ========== */
+.devices {
+  position: relative;
+  margin: 60px 0 0;
 }
-section .sub {
-  color: var(--text-dim); margin: 0 0 32px;
-  font-size: 16px;
-}
-
-/* Animated showcase block */
-.gif-card {
-  border: 1px solid var(--border);
+.browser {
+  background: var(--bg-card);
   border-radius: var(--radius);
+  border: 1px solid var(--border-2);
   overflow: hidden;
-  background: var(--bg-panel);
-  margin-top: 24px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 40px 100px -25px rgba(0, 0, 0, 0.85),
+    0 0 60px -20px rgba(56, 189, 248, 0.20);
+  max-width: 920px; margin: 0 auto;
+  position: relative; z-index: 2;
 }
-.gif-card img { width: 100%; display: block; }
-.gif-card .caption {
-  padding: 14px 18px;
-  font-size: 14px;
-  color: var(--text-dim);
+.browser .titlebar {
+  background: var(--bg-2); padding: 12px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.browser .dot {
+  width: 12px; height: 12px; border-radius: 50%;
+}
+.browser .dot.r { background: #ff5f57; }
+.browser .dot.y { background: #ffbd2e; }
+.browser .dot.g { background: #28ca42; }
+.browser .url {
+  margin-left: 18px; flex: 1; max-width: 360px;
+  background: var(--bg-soft); padding: 5px 14px;
+  border-radius: 6px;
+  color: var(--text-dim); font-size: 12px;
+  font-family: ui-monospace, monospace;
+  border: 1px solid var(--border);
+}
+.browser .url::before { content: "🔒  "; color: var(--good); }
+.browser .body img { width: 100%; display: block; background: #0b1220; }
+
+.phone-row {
+  display: flex; justify-content: center; align-items: flex-end;
+  gap: 28px; margin-top: -40px;
+  position: relative; z-index: 1;
+  perspective: 1400px;
+  flex-wrap: wrap;
+}
+.phone {
+  --pw: 220px; --ph: 440px;
+  width: var(--pw); height: var(--ph);
+  background: linear-gradient(155deg, #1f2a4a 0%, #0d1428 100%);
+  border-radius: 38px;
+  padding: 9px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 0 8px rgba(255, 255, 255, 0.02),
+    0 30px 70px -20px rgba(0, 0, 0, 0.8);
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.phone .notch {
+  position: absolute; top: 18px; left: 50%;
+  transform: translateX(-50%); z-index: 3;
+  width: 90px; height: 22px;
+  background: #050810; border-radius: 14px;
+}
+.phone .screen {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.phone .screen img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.phone.left  { transform: rotate(-8deg) translateY(40px); }
+.phone.right { transform: rotate(8deg)  translateY(40px); }
+.phone.center { transform: scale(1.06); z-index: 2; }
+.phone.left:hover  { transform: rotate(-8deg) translateY(20px) scale(1.02); }
+.phone.center:hover { transform: scale(1.08) translateY(-12px); }
+.phone.right:hover { transform: rotate(8deg)  translateY(20px) scale(1.02); }
+@media (max-width: 900px) {
+  .phone-row { gap: 16px; margin-top: 24px; }
+  .phone { --pw: 180px; --ph: 360px; }
+}
+@media (max-width: 640px) {
+  .phone-row { flex-direction: column; align-items: center; gap: 24px; }
+  .phone, .phone.left, .phone.right, .phone.center { transform: none; }
+}
+
+/* ========== STATS BAR ========== */
+.stats-bar {
+  background: linear-gradient(180deg, transparent, rgba(56, 189, 248, 0.04));
   border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 0;
+  margin-top: 80px;
+}
+.stats-bar .grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px;
+  text-align: center;
+}
+@media (max-width: 800px) { .stats-bar .grid { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+@media (max-width: 480px) { .stats-bar .grid { grid-template-columns: repeat(2, 1fr); } }
+.stats-bar .num {
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800; letter-spacing: -0.02em;
+  background: var(--grad-orange);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.stats-bar .lbl {
+  font-size: 12.5px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  font-weight: 600; margin-top: 4px;
 }
 
-/* Stats strip image */
-.stats-block { margin: 8px 0 0; }
-.stats-block img { border-radius: var(--radius); }
-
-/* Quick install */
-.install-row {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
-  margin-top: 16px;
+/* ========== SECTIONS ========== */
+section { padding: 100px 0; position: relative; }
+section h2 {
+  font-size: clamp(28px, 3.6vw, 40px);
+  margin: 0 0 14px; letter-spacing: -0.02em;
+  font-weight: 800;
 }
-@media (max-width: 720px) { .install-row { grid-template-columns: 1fr; } }
-.install-row pre { margin: 0; }
-.install-row .label {
-  font-size: 12px; color: var(--text-mute); text-transform: uppercase;
-  letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 600;
+section h2 .grad {
+  background: var(--grad-blue);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+section .lead {
+  color: var(--text-dim); margin: 0 0 50px;
+  font-size: 18px; max-width: 720px;
+}
+section .eyebrow {
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--accent); text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
-/* Feature grid */
+/* ========== FEATURES ========== */
 .features-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-  margin-top: 24px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
 }
 @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
 .feature {
-  background: var(--bg-panel);
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 22px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  padding: 28px;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.feature::before {
+.feature:hover {
+  transform: translateY(-4px);
+  border-color: var(--text-mute);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+}
+.feature::after {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--accent);
+  background: var(--grad-orange);
+  opacity: 0.85;
 }
-.feature:hover { transform: translateY(-3px); border-color: var(--text-mute); }
-.feature:nth-child(1)::before { background: var(--accent); }
-.feature:nth-child(2)::before { background: var(--accent-2); }
-.feature:nth-child(3)::before { background: var(--good); }
-.feature:nth-child(4)::before { background: var(--primary); }
-.feature:nth-child(5)::before { background: var(--primary-2); }
-.feature:nth-child(6)::before { background: var(--bad); }
-.feature .icon {
-  width: 36px; height: 36px; border-radius: 8px; margin-bottom: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; color: #0b1220; font-size: 18px;
+.feature .icon-wrap {
+  width: 44px; height: 44px; border-radius: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+  font-size: 22px; font-weight: 800; color: #0a0e1a;
 }
-.feature:nth-child(1) .icon { background: var(--accent); }
-.feature:nth-child(2) .icon { background: var(--accent-2); }
-.feature:nth-child(3) .icon { background: var(--good); }
-.feature:nth-child(4) .icon { background: var(--primary); }
-.feature:nth-child(5) .icon { background: var(--primary-2); }
-.feature:nth-child(6) .icon { background: var(--bad); }
-.feature h3 { margin: 0 0 8px; font-size: 17px; }
-.feature p { margin: 0; color: var(--text-dim); font-size: 14.5px; }
+.feature.f1 .icon-wrap { background: var(--grad-orange); }
+.feature.f2 .icon-wrap { background: var(--accent-2); }
+.feature.f3 .icon-wrap { background: var(--good); }
+.feature.f4 .icon-wrap { background: var(--primary); }
+.feature.f5 .icon-wrap { background: var(--primary-2); }
+.feature.f6 .icon-wrap { background: var(--bad); }
+.feature.f1::after { background: var(--grad-orange); }
+.feature.f2::after { background: var(--accent-2); }
+.feature.f3::after { background: var(--good); }
+.feature.f4::after { background: var(--primary); }
+.feature.f5::after { background: var(--primary-2); }
+.feature.f6::after { background: var(--bad); }
+.feature h3 { margin: 0 0 10px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+.feature p { margin: 0; color: var(--text-dim); font-size: 15px; line-height: 1.6; }
+.feature p strong { color: var(--text-2); font-weight: 600; }
 
-/* Charts gallery */
-.charts {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px;
-  margin-top: 24px;
+/* ========== HOW IT WORKS ========== */
+.how {
+  background:
+    radial-gradient(60% 60% at 50% 0%, rgba(56, 189, 248, 0.05), transparent 70%);
 }
-@media (max-width: 800px) { .charts { grid-template-columns: 1fr; } }
-.chart {
-  background: var(--bg-panel);
+.steps {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  position: relative;
+}
+@media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
+.step {
+  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  padding: 28px;
+  position: relative;
 }
-.chart img { width: 100%; display: block; background: white; }
-.chart .body { padding: 16px 18px; }
-.chart h4 { margin: 0 0 6px; font-size: 16px; }
-.chart p { margin: 0; color: var(--text-dim); font-size: 14px; }
+.step .n {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg-soft); border: 1px solid var(--border-2);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; color: var(--accent); font-size: 15px;
+  margin-bottom: 16px;
+}
+.step h3 { margin: 0 0 10px; font-size: 19px; }
+.step p { margin: 0 0 14px; color: var(--text-dim); font-size: 14.5px; }
+.step pre { margin: 0; font-size: 12.5px; padding: 12px 14px; }
 
-/* Full-width image (schema) */
-.full-image { margin-top: 24px; }
-.full-image img {
-  width: 100%; border-radius: var(--radius);
-  border: 1px solid var(--border);
+/* ========== USE CASES ========== */
+.usecases {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 16px;
+}
+.usecase {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 10px 18px; border-radius: 999px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  font-size: 14.5px; color: var(--text-2); font-weight: 500;
+  transition: border-color 0.2s, color 0.2s;
+}
+.usecase:hover { border-color: var(--accent); color: var(--text); }
+.usecase .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
 }
 
-/* Cohort table */
-.cohort-table {
-  margin-top: 20px; border-collapse: collapse; width: 100%;
-  font-size: 14px; background: var(--bg-panel);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  overflow: hidden;
+/* ========== FINAL CTA ========== */
+.final-cta {
+  background:
+    radial-gradient(80% 60% at 50% 50%, rgba(249, 115, 22, 0.12), transparent 80%),
+    var(--bg-card);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 70px 40px;
+  text-align: center;
+  margin: 0 auto;
+  max-width: 900px;
 }
-.cohort-table th, .cohort-table td {
-  padding: 11px 14px; text-align: left;
-  border-bottom: 1px solid var(--border);
+.final-cta h2 {
+  font-size: clamp(28px, 3.5vw, 40px); margin: 0 0 14px;
+  letter-spacing: -0.02em;
 }
-.cohort-table th {
-  background: var(--bg-soft); color: var(--text-dim);
-  font-weight: 600; font-size: 12.5px; text-transform: uppercase;
-  letter-spacing: 0.04em;
+.final-cta p {
+  color: var(--text-dim); margin: 0 0 30px; font-size: 17px;
+  max-width: 560px; margin-left: auto; margin-right: auto;
 }
-.cohort-table tr:last-child td { border-bottom: 0; }
-.cohort-pill {
-  display: inline-block; padding: 2px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 600; color: #0b1220;
+.final-cta .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.final-cta .ctas a {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.c-loyal-h { background: var(--good); }
-.c-loyal-l { background: #34d399; }
-.c-grow    { background: var(--primary); }
-.c-decl    { background: var(--accent); }
-.c-churn   { background: var(--bad); color: #fff; }
-.c-once    { background: var(--text-mute); }
+.final-cta .ctas a:hover { transform: translateY(-2px); }
+.final-cta .ctas .primary {
+  background: var(--grad-orange); color: #0a0e1a;
+  box-shadow: 0 12px 32px -10px rgba(249, 115, 22, 0.6);
+}
+.final-cta .ctas .secondary {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border-2);
+}
 
-/* References */
-.refs ol { padding-left: 24px; }
-.refs li { margin-bottom: 10px; color: var(--text-dim); font-size: 14.5px; }
-.refs li b { color: var(--text); }
-
-/* Footer */
+/* ========== FOOTER ========== */
 footer {
   border-top: 1px solid var(--border);
-  padding: 32px 0;
+  padding: 36px 0;
   font-size: 13px; color: var(--text-mute);
+  margin-top: 80px;
 }
 footer .row {
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 12px;
+  flex-wrap: wrap; gap: 16px;
 }
-
-/* Decorative inline tags */
-.tag {
-  display: inline-block; padding: 2px 9px; border-radius: 999px;
-  font-size: 12px; border: 1px solid var(--border);
-  color: var(--text-dim); background: var(--bg-panel);
-  margin-right: 4px;
+footer .stack {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+footer .stack span {
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  font-size: 12px; color: var(--text-dim);
 }
 </style>
 </head>
 <body>
 
-<!-- Top nav -->
+<!-- ========== NAV ========== -->
 <nav class="top">
   <div class="row">
     <div class="brand"><span class="dot"></span> erp-synth</div>
     <div class="links">
       <a href="#features">Features</a>
-      <a href="#showcase">Showcase</a>
-      <a href="#schema">Schema</a>
-      <a href="#install">Install</a>
-      <a href="#cohorts">Cohorts</a>
-      <a href="#references">References</a>
+      <a href="#how">How it works</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="technical.html">Technical →</a>
     </div>
-    <a class="cta" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">View on GitHub →</a>
+    <a class="cta" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">⭐ GitHub</a>
   </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero" style="border-top:0;">
+<!-- ========== HERO ========== -->
+<section class="hero" style="padding-top:70px;">
   <div class="container">
-    <h1>Realistic, multi&#8209;year retail data — from one Python command.</h1>
-    <p class="tagline">A configurable synthetic data generator for retail / CRM / ERP analytics.
-       AdventureWorks-style relational schema, RetailSynth-grade cohort behavior,
-       holiday seasonality, promotions, returns, multi-market support, and 100% reproducibility from a seed.</p>
-
-    <div class="badges">
-      <a href="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml"><img src="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-      <img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python" />
-      <img src="https://img.shields.io/badge/pandas-2.x-150458?style=flat-square" alt="pandas" />
-      <img src="https://img.shields.io/badge/numpy-2.x-013243?style=flat-square" alt="numpy" />
-      <img src="https://img.shields.io/badge/Faker-40-orange?style=flat-square" alt="Faker" />
-      <img src="https://img.shields.io/badge/lint-ruff-d97706?style=flat-square" alt="ruff" />
-      <img src="https://img.shields.io/badge/tests-111%20passing-22c55e?style=flat-square" alt="tests" />
-      <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT" />
-      <img src="https://img.shields.io/badge/reproducible-100%25-22c55e?style=flat-square" alt="Reproducible" />
-    </div>
+    <span class="pill"><span class="new">v0.2</span> Now with marketing spend, support tickets, and NPS</span>
+    <h1>Synthetic retail data <span class="grad">that feels real.</span></h1>
+    <p class="tagline">Generate <strong>100,000+ rows</strong> of realistic, multi-year retail data across 9 relational tables — in 70 seconds, from a single Python command. AdventureWorks-style schema, Nobel-winning cohort theory, fully reproducible.</p>
 
     <div class="ctas">
-      <a class="primary" href="#install">▶ Get started</a>
-      <a class="secondary" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">⭐ View on GitHub</a>
+      <a class="primary" href="#how">▶ Get started in 30 seconds</a>
+      <a class="secondary" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">View on GitHub →</a>
     </div>
 
-    <div class="gif-card" style="margin-top:32px;">
-      <img src="branding/data_unfolds.gif" alt="11 years of monthly revenue unfolding frame by frame, with November/December holiday spikes flaring up as they arrive" />
-      <div class="caption">Eleven years of monthly revenue, drawn frame by frame.
-        Watch November / December holiday spikes flare up year after year as the customer base ramps from 9 to 1,000.</div>
+    <div class="install-line">
+      <span class="prompt">$</span> pip install -e ".[charts]" &nbsp;&nbsp;<span style="color:var(--text-mute)">→</span>&nbsp;&nbsp; erp-synth --seed 42 --n-customers 1000
     </div>
 
-    <div class="stats-block" style="margin-top:24px;">
-      <img src="branding/stats_strip.png" alt="Headline stats: 1,000 customers, 52,620 invoices, 100,627 sales lines, $10.4M gross revenue, 65% gross margin, 2.8% returns share" />
+    <!-- Browser frame with the GIF -->
+    <div class="devices">
+      <div class="browser">
+        <div class="titlebar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">scripts-and-tables.github.io/erp-synthetic-data-generator/</span>
+        </div>
+        <div class="body">
+          <img src="branding/data_unfolds.gif" alt="11 years of monthly revenue unfolding frame by frame, with November and December holiday spikes flaring up as they arrive" />
+        </div>
+      </div>
+
+      <!-- Phone row -->
+      <div class="phone-row">
+        <div class="phone left">
+          <div class="notch"></div>
+          <div class="screen"><img src="branding/phone_revenue.png" alt="Sales pulse: $2.20M last 12 months, +3.4% YoY, monthly revenue with holiday spikes" /></div>
+        </div>
+        <div class="phone center">
+          <div class="notch"></div>
+          <div class="screen"><img src="branding/phone_cohorts.png" alt="Cohort health: 1,000 customers across 6 behavioral segments, sticky cohort assignment" /></div>
+        </div>
+        <div class="phone right">
+          <div class="notch"></div>
+          <div class="screen"><img src="branding/phone_markets.png" alt="Markets out of the box: US/USD/8.75% VAT/Black Friday, GCC/AED/5% VAT/Ramadan+Eid, EU/EUR/20% VAT/Boxing Week" /></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Install -->
-<section id="install">
+<!-- ========== STATS BAR ========== -->
+<div class="stats-bar">
   <div class="container">
-    <h2>Get started in 30 seconds</h2>
-    <p class="sub">Editable install with the optional <code>charts</code> extra brings in matplotlib for the visualization scripts.</p>
+    <div class="grid">
+      <div><div class="num">100k+</div><div class="lbl">Rows in 70s</div></div>
+      <div><div class="num">9</div><div class="lbl">Relational tables</div></div>
+      <div><div class="num">11 yrs</div><div class="lbl">Default horizon</div></div>
+      <div><div class="num">3</div><div class="lbl">Markets preset</div></div>
+      <div><div class="num">6</div><div class="lbl">Sticky cohorts</div></div>
+      <div><div class="num">100%</div><div class="lbl">Reproducible</div></div>
+    </div>
+  </div>
+</div>
 
-    <div class="install-row">
-      <div>
-        <div class="label">Install</div>
+<!-- ========== FEATURES ========== -->
+<section id="features">
+  <div class="container">
+    <div class="eyebrow">why teams pick erp-synth</div>
+    <h2>Made for analytics teams that <span class="grad">need data yesterday.</span></h2>
+    <p class="lead">Six product decisions that turn synthetic data from "dummy CSVs" into a production-grade dataset you can train models on, ship demos with, or teach from.</p>
+
+    <div class="features-grid">
+      <div class="feature f1">
+        <div class="icon-wrap">⚡</div>
+        <h3>Massive volume, instantly</h3>
+        <p>Generate <strong>100,000+ sales lines across 9 tables in 70 seconds</strong>. Streaming CSV writes mean memory stays flat — push to millions of rows on a laptop without OOM.</p>
+      </div>
+      <div class="feature f2">
+        <div class="icon-wrap">★</div>
+        <h3>Scientifically grounded</h3>
+        <p>Cohort behavior anchored in <strong>Fader-Hardie buy-till-you-die</strong> models. Discrete choice from McFadden's Nobel-winning framework. Schema follows Microsoft AdventureWorks. <a href="technical.html#references">10 cited papers</a>.</p>
+      </div>
+      <div class="feature f3">
+        <div class="icon-wrap">⚙</div>
+        <h3>Highly customizable</h3>
+        <p><strong>20+ CLI flags</strong> control market, seasonality, inflation rate, returns probability, promotion frequency, customer field missingness, basket composition. Every knob you'd want.</p>
+      </div>
+      <div class="feature f4">
+        <div class="icon-wrap">↗</div>
+        <h3>Unlimited data export</h3>
+        <p>Plain CSV. Works with <strong>pandas, Excel, Power BI, Tableau, dbt, DuckDB, Postgres, Snowflake</strong> — anything that reads a delimited file. No vendor lock-in. No row caps.</p>
+      </div>
+      <div class="feature f5">
+        <div class="icon-wrap">🌍</div>
+        <h3>Multi-market by design</h3>
+        <p><strong>US, GCC, EU presets</strong> out of the box. Locale, currency, VAT, weekend definition (Sat/Sun vs Fri/Sat), payment methods, Eid + Black Friday + Boxing Week — all swappable per market.</p>
+      </div>
+      <div class="feature f6">
+        <div class="icon-wrap">⟲</div>
+        <h3>Reproducible to the byte</h3>
+        <p>Single <code>--seed</code> flag drives every RNG. Run twice → <strong>identical CSVs, sha256 match</strong>. CI checks this on every push. Your demos won't drift.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section id="how" class="how">
+  <div class="container">
+    <div class="eyebrow">three commands</div>
+    <h2>From zero to <span class="grad">100,000 rows</span> in 30 seconds.</h2>
+    <p class="lead">No accounts, no API keys, no cloud setup. Pure Python, pure CSV out, pure determinism.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <h3>Install</h3>
+        <p>Editable install with the <code>charts</code> extra brings in matplotlib for visualization scripts.</p>
 <pre><code>git clone https://github.com/scripts-and-tables/erp-synthetic-data-generator
 cd erp-synthetic-data-generator
 pip install -e ".[charts]"</code></pre>
       </div>
-      <div>
-        <div class="label">Generate</div>
-<pre><code>erp-synth --seed 42 --market us --n-customers 1000 \
-          --date-from 2015-01-01 --date-till 2025-12-31
-
-python scripts/verify.py output_csv
-python scripts/generate_charts.py output_csv docs/charts</code></pre>
+      <div class="step">
+        <div class="n">2</div>
+        <h3>Generate</h3>
+        <p>Pick a market, a date range, and a scale. The <code>erp-synth</code> CLI handles the rest.</p>
+<pre><code>erp-synth --seed 42 --market us \
+          --n-customers 1000 \
+          --date-from 2015-01-01 \
+          --date-till 2025-12-31</code></pre>
       </div>
-    </div>
-
-    <div class="label" style="margin-top:24px;">Use it</div>
+      <div class="step">
+        <div class="n">3</div>
+        <h3>Analyze</h3>
+        <p>Open in pandas, pipe into your warehouse, or load into Power BI. 9 fully-relational CSVs, ready to query.</p>
 <pre><code>import pandas as pd
 
 lines = pd.read_csv("output_csv/sales_lines.csv")
-headers = pd.read_csv("output_csv/invoice_headers.csv", parse_dates=["order_date"])
-
-monthly = (
-    lines.merge(headers[["invoice_id", "order_date", "is_return"]], on="invoice_id")
-         .query("is_return == 0")
-         .assign(ym=lambda d: d.order_date.dt.to_period("M"))
-         .groupby("ym").line_total.sum()
-)
-print(monthly.tail(12))</code></pre>
-  </div>
-</section>
-
-<!-- Features -->
-<section id="features">
-  <div class="container">
-    <h2>Six axes of realism</h2>
-    <p class="sub">Each design choice is grounded in established work on retail data modeling, customer-base analysis, discrete choice theory, or synthetic-data evaluation. <a href="#references">See bibliography →</a></p>
-
-    <div class="features-grid">
-      <div class="feature">
-        <div class="icon">$</div>
-        <h3>Realistic pricing &amp; margins</h3>
-        <p><code>list_price</code> and <code>standard_cost</code> per SKU, line-level discounts, multi-year inflation, frozen-at-listing cost so margins drift up over time.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">★</div>
-        <h3>Holiday seasonality</h3>
-        <p>Black Friday, Cyber Monday, Christmas, July 4 in US/EU — Ramadan, Eid al-Fitr, Eid al-Adha, UAE National Day in GCC. Each market has its own calendar.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">◉</div>
-        <h3>Sticky cohorts</h3>
-        <p>Six behavioral segments deterministically assigned per <code>(seed, customer_id)</code>. Same customer always gets the same cohort across runs.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">%</div>
-        <h3>Promotions &amp; returns</h3>
-        <p>Promotion master with anchored events, line-level <code>discount_pct</code>, and ~3% of orders generate a linked return invoice with negated quantities.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">◆</div>
-        <h3>Multi-market</h3>
-        <p><code>--market {us,gcc,eu}</code> swaps locale, currency, VAT, weekend definition (Sat/Sun vs Fri/Sat), payment methods, and holiday calendar.</p>
-      </div>
-      <div class="feature">
-        <div class="icon">⟲</div>
-        <h3>Reproducibility</h3>
-        <p>Single <code>--seed</code> drives every RNG (numpy + python random + Faker + pandas). Same seed → byte-identical CSVs. CI checks this on every push.</p>
+hdrs  = pd.read_csv("output_csv/invoice_headers.csv")
+# ... your analysis here</code></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Showcase -->
-<section id="showcase">
+<!-- ========== USE CASES ========== -->
+<section id="use-cases">
   <div class="container">
-    <h2>What the data looks like</h2>
-    <p class="sub">All charts below are produced by <code>scripts/generate_charts.py</code> from the shipped 1,000-customer × 11-year sample (seed 42). Re-run on any seed to regenerate.</p>
+    <div class="eyebrow">used for</div>
+    <h2>Built for the work you actually do.</h2>
+    <p class="lead">Whether you're prototyping a churn model, demoing a dashboard, teaching SQL, or staging a data pipeline — erp-synth gives you data that looks and behaves like the real thing, without an NDA.</p>
 
-    <div class="charts">
-      <div class="chart">
-        <img src="charts/monthly_revenue.png" alt="Monthly revenue across 11 years showing recurring November/December spikes" />
-        <div class="body">
-          <h4>Holiday seasonality is built in</h4>
-          <p>Nov &amp; Dec consistently spike 2–3× above the baseline, year over year. The ramp from 2015 → 2025 reflects the logistic-growth signup curve.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/holiday_spikes_2023.png" alt="Daily revenue for 2023 showing distinct spikes on Black Friday, Cyber Monday, Christmas Eve, and July 4" />
-        <div class="body">
-          <h4>Holiday calendar is real</h4>
-          <p>Black Friday, Cyber Monday, Christmas Eve, July 4 — every market gets its own holiday bumps. GCC swaps in Ramadan + Eid; EU keeps Boxing Week.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/cohort_retention.png" alt="Cohort retention curves diverging cleanly across six behavioral cohorts" />
-        <div class="body">
-          <h4>Cohort retention</h4>
-          <p>Six behavioral cohorts diverge cleanly on retention curves — exactly the kind of signal you'd train churn models on.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/gross_margin.png" alt="Gross margin distribution by category — refills highest, devices lowest" />
-        <div class="body">
-          <h4>Gross margin distribution</h4>
-          <p>Refills highest-margin (consumables), devices lowest (high COGS). Mean margins drift up over time because <code>standard_cost</code> is frozen at listing time.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/promo_lift.png" alt="Discount activity over time spiking during promo windows" />
-        <div class="body">
-          <h4>Promotions show up</h4>
-          <p>Discount $ given grows with the customer base. Discount-as-% of revenue clearly spikes 15–20% during Black Friday weeks vs. ~0% baseline.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/returns_over_time.png" alt="Returns share by quarter converging to ~3%" />
-        <div class="body">
-          <h4>Returns hold steady</h4>
-          <p>Around the configured 3% rate (default <code>--p-return 0.03</code>). Earlier quarters noisy due to small N; converges as customer base grows.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/signup_curve.png" alt="Cumulative customer signups following a logistic-growth curve" />
-        <div class="body">
-          <h4>Logistic-growth signups</h4>
-          <p>Slow start → ramp → plateau, replacing the uniform-random distribution most generators ship.</p>
-        </div>
-      </div>
-      <div class="chart">
-        <img src="charts/top_products.png" alt="Top 10 products by revenue, color-coded by category" />
-        <div class="body">
-          <h4>Top SKUs by revenue</h4>
-          <p>Premium devices and bulk industrial refills dominate. SKU-level analysis is straightforward across the 98 items in the sample.</p>
-        </div>
+    <div class="usecases">
+      <span class="usecase"><span class="dot"></span> BI &amp; analytics dashboards</span>
+      <span class="usecase"><span class="dot"></span> ML training &amp; evaluation</span>
+      <span class="usecase"><span class="dot"></span> Cohort &amp; churn modeling</span>
+      <span class="usecase"><span class="dot"></span> Data engineering portfolios</span>
+      <span class="usecase"><span class="dot"></span> Pricing &amp; promo experiments</span>
+      <span class="usecase"><span class="dot"></span> dbt / warehouse staging</span>
+      <span class="usecase"><span class="dot"></span> SQL teaching material</span>
+      <span class="usecase"><span class="dot"></span> Synthetic-data benchmarks</span>
+      <span class="usecase"><span class="dot"></span> Vendor demo datasets</span>
+      <span class="usecase"><span class="dot"></span> RFM segmentation</span>
+      <span class="usecase"><span class="dot"></span> CAC / LTV analysis</span>
+      <span class="usecase"><span class="dot"></span> NPS &amp; CSAT pipelines</span>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FINAL CTA ========== -->
+<section style="padding-bottom: 40px;">
+  <div class="container">
+    <div class="final-cta">
+      <h2>Ready to see the data?</h2>
+      <p>One command, 70 seconds, 100,000+ rows. Or browse the <a href="technical.html">technical deep-dive</a> for the full schema, cohort math, and bibliography.</p>
+      <div class="ctas">
+        <a class="primary" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">⭐ Get it on GitHub</a>
+        <a class="secondary" href="technical.html">📖 Read the tech docs</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Schema -->
-<section id="schema">
-  <div class="container">
-    <h2>Schema — 4 dimensions + 2 facts, fully relational</h2>
-    <p class="sub">Six core CSVs plus three voice-of-customer extensions (marketing spend, support tickets, NPS). Header / line invoice split mirrors AdventureWorks' <code>SalesOrderHeader / SalesOrderDetail</code>.</p>
-
-    <div class="full-image">
-      <img src="branding/schema.png" alt="Schema diagram with items, promotions, customers, stores, invoice_headers, sales_lines and FK arrows" />
-    </div>
-  </div>
-</section>
-
-<!-- Cohort behavior model -->
-<section id="cohorts">
-  <div class="container">
-    <h2>The customer behavior model</h2>
-    <p class="sub">Each customer is permanently assigned to one of six cohorts via <code>random.Random(seed ^ customer_id)</code>. Daily buy probability is then modulated by seasonality, weekend uplift, holiday bumps, and the customer's price sensitivity.</p>
-
-    <table class="cohort-table">
-      <thead>
-        <tr>
-          <th>Cohort</th><th>Buy prob (Yr 1→4)</th><th>Lost / day</th>
-          <th>Refill basket</th><th>Price sens</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td><span class="cohort-pill c-loyal-h">LOYAL_HEAVY</span> 10%</td><td>6% → 10%</td><td>0.0001</td><td>up to 5 refills</td><td>0.20</td></tr>
-        <tr><td><span class="cohort-pill c-loyal-l">LOYAL_LIGHT</span> 20%</td><td>3% → 5%</td><td>0.0001</td><td>1–4 refills</td><td>0.40</td></tr>
-        <tr><td><span class="cohort-pill c-grow">GROWING</span> 20%</td><td>2% → 8%</td><td>0.0002</td><td>1–4 refills</td><td>0.55</td></tr>
-        <tr><td><span class="cohort-pill c-decl">DECLINING</span> 20%</td><td>6% → 1%</td><td>0.0003</td><td>smaller</td><td>0.70</td></tr>
-        <tr><td><span class="cohort-pill c-churn">CHURN_RISK</span> 10%</td><td>4% → 0.5%</td><td>0.0006</td><td>small</td><td>0.90</td></tr>
-        <tr><td><span class="cohort-pill c-once">ONE_SHOT</span> 20%</td><td>spike → 0%</td><td>0.0008</td><td>small</td><td>0.85</td></tr>
-      </tbody>
-    </table>
-
-<pre style="margin-top:18px;"><code>p_buy_day = clip(
-    cohort.p_buy_by_year[year_idx]            # cohort schedule
-    × month_factor[month]                     # Nov 1.6, Dec 1.8, Jan 0.7, ...
-    × dow_factor[dow]                         # weekend 1.15
-    × holiday_bump(date)                      # Black Friday 2.5, Christmas 1.8, Eid 2.0
-    × (1 - 0.20 × price_sensitivity),
-    0, 1
-)</code></pre>
-
-    <p style="color:var(--text-dim); margin-top:14px; font-size:14.5px;">
-      So a <code>LOYAL_HEAVY</code> customer on Black Friday in their fourth year buys with <b>p ≈ 31%</b>,
-      while the same customer on a Tuesday in February buys with <b>p ≈ 8%</b>.
-      The customer also has a sticky <code>brand_affinity</code> that filters their product pool toward one device family.
-    </p>
-  </div>
-</section>
-
-<!-- References -->
-<section id="references" class="refs">
-  <div class="container">
-    <h2>References</h2>
-    <p class="sub">Each design choice is anchored in established literature.
-       BibTeX for every entry: <a href="REFERENCES.bib"><code>docs/REFERENCES.bib</code></a>.</p>
-
-    <ol>
-      <li><b>Microsoft.</b> <i>AdventureWorks Sample Databases.</i> SQL Server documentation. <a href="https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure">link</a></li>
-      <li><b>Xia, Y., Arian, A., Narayanamoorthy, S., &amp; Mabry, J.</b> (2023). <i>RetailSynth: Synthetic Data Generation for Retail AI Systems Evaluation.</i> arXiv:2312.14095. <a href="https://arxiv.org/abs/2312.14095">link</a></li>
-      <li><b>Xia, Y., Wang, C.-H., Mabry, J., &amp; Cheng, G.</b> (2024). <i>Advancing Retail Data Science: Comprehensive Evaluation of Synthetic Data.</i> arXiv:2406.13130. <a href="https://arxiv.org/abs/2406.13130">link</a></li>
-      <li><b>Fader, P. S., Hardie, B. G. S., &amp; Lee, K. L.</b> (2005). <i>"Counting Your Customers" the Easy Way: An Alternative to the Pareto/NBD Model.</i> Marketing Science, 24(2), 275–284. <a href="https://www.brucehardie.com/papers/bgnbd_2004-04-20.pdf">PDF</a></li>
-      <li><b>Fader, P. S., &amp; Hardie, B. G. S.</b> (2009). <i>Probability Models for Customer-Base Analysis.</i> Journal of Interactive Marketing, 23(1), 61–69. <a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Fader_hardie_jim_09.pdf">PDF</a></li>
-      <li><b>McFadden, D.</b> (1974). <i>Conditional Logit Analysis of Qualitative Choice Behavior.</i> In P. Zarembka (Ed.), Frontiers in Econometrics (pp. 105–142). Academic Press. <a href="https://eml.berkeley.edu/reprints/mcfadden/zarembka.pdf">PDF</a></li>
-      <li><b>McFadden, D., &amp; Train, K.</b> (2000). <i>Mixed MNL Models for Discrete Response.</i> Journal of Applied Econometrics, 15(5), 447–470. <a href="https://pages.stern.nyu.edu/~wgreene/DiscreteChoice/Readings/McFadden-Train.pdf">PDF</a></li>
-      <li><b>McFadden, D.</b> (2001). <i>Economic Choices.</i> Nobel Lecture. <a href="https://eml.berkeley.edu/~mcfadden/nobel/final-nobel.pdf">PDF</a></li>
-      <li><b>Faraglia, D. and others.</b> <i>Faker: Python package for fake data generation.</i> <a href="https://faker.readthedocs.io/">link</a></li>
-      <li><b>Fader, P. S., Hardie, B. G. S., &amp; Shang, J.</b> (2010). <i>Customer-Base Analysis in a Discrete-Time Noncontractual Setting.</i> Marketing Science, 29(6), 1086–1108. <a href="https://www.brucehardie.com/papers/020/fader_et_al_mksc_10.pdf">PDF</a></li>
-    </ol>
-  </div>
-</section>
-
+<!-- ========== FOOTER ========== -->
 <footer>
   <div class="container row">
-    <div>
-      <span class="tag">Python 3.10+</span>
-      <span class="tag">MIT licensed</span>
-      <span class="tag">v0.2.0</span>
+    <div class="stack">
+      <span>Python 3.10+</span>
+      <span>MIT license</span>
+      <span>v0.2.0</span>
+      <span>111 tests</span>
+      <span>ruff-clean</span>
     </div>
     <div>
-      Built with pandas · numpy · Faker · matplotlib · pytest · ruff ·
+      Built on pandas · numpy · Faker · matplotlib ·
       <a href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">GitHub</a>
     </div>
   </div>
