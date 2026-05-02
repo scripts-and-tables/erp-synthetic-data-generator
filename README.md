@@ -3,6 +3,12 @@
 </p>
 
 <p align="center">
+  <strong>🌐 <a href="https://scripts-and-tables.github.io/erp-synthetic-data-generator/">Live showcase site</a></strong> &nbsp;·&nbsp;
+  <a href="#try-it-in-30-seconds">Quick start</a> &nbsp;·&nbsp;
+  <a href="#references">References</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml"><img src="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python"></a>
   <a href="https://pandas.pydata.org/"><img src="https://img.shields.io/badge/pandas-2.x-150458?style=flat-square" alt="pandas"></a>
@@ -344,6 +350,30 @@ ruff format .                 # autoformat
 - **End-to-end smoke** — install the package, run `erp-synth` on a small dataset, verify integrity, then re-run with same seed and assert all 9 CSV `sha256sum`s match (catches reproducibility regressions)
 
 CI status appears as the badge at the top of this README.
+
+### Live showcase site (GitHub Pages)
+
+A self-contained landing page lives at [`docs/index.html`](docs/index.html) — dark-themed, responsive, single-file HTML + CSS that reuses every brand asset (`docs/branding/*`) and chart (`docs/charts/*`).
+
+Once GitHub Pages is enabled, the site is served at:
+
+> **<https://scripts-and-tables.github.io/erp-synthetic-data-generator/>**
+
+**One-time enable** (must be done by a repo admin in the GitHub UI):
+
+1. Go to the repo on GitHub → **Settings** → **Pages**
+2. Under **Build and deployment** → **Source**, choose **Deploy from a branch**
+3. Set **Branch** to `main` and **Folder** to `/docs`
+4. Save. The page goes live within ~60 seconds at the URL above.
+
+The [`docs/.nojekyll`](docs/.nojekyll) flag tells Pages to serve the folder as-is (skip Jekyll processing). [`docs/404.html`](docs/404.html) is a friendly fallback that redirects unknown paths back to the home page.
+
+To preview the page locally before pushing:
+
+```bash
+python -m http.server 8000 --directory docs
+# open http://localhost:8000
+```
 
 ---
 
