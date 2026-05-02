@@ -8,7 +8,6 @@ import pandas as pd
 
 from .rng_utils import RNGs
 
-
 # (city, region, lat, lon) — hand-curated for the cities used by markets
 _CITY_POOL = {
     "US": [

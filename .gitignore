@@ -2,6 +2,22 @@ __pycache__/
 *.pyc
 *.pyo
 .venv/
+venv/
 .idea/
 .vscode/
 .DS_Store
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml

@@ -3,10 +3,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml"><img src="https://github.com/scripts-and-tables/erp-synthetic-data-generator/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python"></a>
   <a href="https://pandas.pydata.org/"><img src="https://img.shields.io/badge/pandas-2.x-150458?style=flat-square" alt="pandas"></a>
   <a href="https://numpy.org/"><img src="https://img.shields.io/badge/numpy-2.x-013243?style=flat-square" alt="numpy"></a>
   <a href="https://faker.readthedocs.io/"><img src="https://img.shields.io/badge/Faker-40-orange?style=flat-square" alt="Faker"></a>
+  <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/lint-ruff-d97706?style=flat-square" alt="ruff"></a>
+  <a href="https://docs.pytest.org/"><img src="https://img.shields.io/badge/tests-111%20passing-22c55e?style=flat-square" alt="tests"></a>
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/reproducible-100%25-22c55e?style=flat-square" alt="Reproducible">
 </p>
@@ -122,20 +125,22 @@ The header / line split mirrors AdventureWorks' `SalesOrderHeader / SalesOrderDe
 ## Try it in 30 seconds
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/scripts-and-tables/erp-synthetic-data-generator
 cd erp-synthetic-data-generator
-pip install pandas numpy Faker matplotlib
+pip install -e ".[charts]"
 
 # Generate a fresh sample (US, 1k customers, 11 years, seed 42)
-python run.py --seed 42 --market us --n-customers 1000 \
-              --date-from 2015-01-01 --date-till 2025-12-31
+erp-synth --seed 42 --market us --n-customers 1000 \
+          --date-from 2015-01-01 --date-till 2025-12-31
 
 # Verify integrity (schema, FKs, header/line totals reconciliation, ...)
 python scripts/verify.py output_csv
 
-# Render all 9 charts
+# Render all 14 showcase charts
 python scripts/generate_charts.py output_csv docs/charts
 ```
+
+`erp-synth` is the installed console entry point — equivalent to `python run.py` from the repo root.
 
 A pre-built **sample dataset** lives in [`output_csv/sample/`](output_csv/sample/) so you can start exploring immediately — no run required.
 
@@ -266,6 +271,73 @@ ALL CHECKS PASSED
 ```
 
 **Reproducibility test:** run twice with the same seed, `sha256sum` matches across all 6 CSVs.
+
+---
+
+## Development
+
+The project ships as a properly packaged, installable Python distribution with a full test suite and CI.
+
+### Setup
+
+```bash
+git clone https://github.com/scripts-and-tables/erp-synthetic-data-generator
+cd erp-synthetic-data-generator
+pip install -e ".[dev]"     # editable install + test/lint deps
+```
+
+After install, the `erp-synth` CLI is on your PATH, and the package is importable as `erp_synth`:
+
+```python
+from erp_synth.cohorts import assign_cohort
+from erp_synth.markets import get_market
+```
+
+### Test suite
+
+**111 tests** across 12 files, runnable in under 10 seconds:
+
+```bash
+pytest                              # full suite (unit + slow integration)
+pytest -m "not slow"                # unit tests only (~2s, 107 tests)
+pytest -m slow                      # end-to-end pipeline tests (~6s, 4 tests)
+pytest --cov=erp_synth --cov-report=term-missing
+```
+
+What's covered:
+
+| File | What it tests |
+|---|---|
+| `test_rng_utils.py` | seed determinism, derived RNG isolation |
+| `test_markets.py` | market preset integrity, override flow, holidays per year |
+| `test_cohorts.py` | sticky deterministic assignment, all 6 cohorts realized, brand affinity |
+| `test_seasonality.py` | Black Friday / Christmas / Ramadan / weekend uplifts |
+| `test_pricing.py` | inflation math, discount clamping, rounding |
+| `test_promotions.py` | promo lookup correctness, best-discount precedence, scope filtering |
+| `test_returns.py` | quantity/money negation, date window, cohort-respecting |
+| `test_items.py` | catalog counts, list_price > standard_cost, refill subcategories |
+| `test_customers.py` | demographic columns, cohort label set, geography pool |
+| `test_stores.py` | lat/lon bounds, store-type set, country pool |
+| `test_sales.py` | header/line consistency, line-total reconciliation |
+| `test_marketing_support.py` | per-month-per-channel uniqueness, holiday boost, NPS bounds |
+| `test_integration.py` | full pipeline produces all 9 CSVs, passes `verify.py`, reproducible |
+
+### Lint & format
+
+```bash
+ruff check .                  # lint (ruff config in pyproject.toml)
+ruff format .                 # autoformat
+```
+
+### Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and PR:
+
+- **Lint** — `ruff check .` (zero warnings target)
+- **Tests** — pytest matrix on Python 3.10 / 3.11 / 3.12, with coverage
+- **End-to-end smoke** — install the package, run `erp-synth` on a small dataset, verify integrity, then re-run with same seed and assert all 9 CSV `sha256sum`s match (catches reproducibility regressions)
+
+CI status appears as the badge at the top of this README.
 
 ---
 

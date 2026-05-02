@@ -8,7 +8,6 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
-
 # Month-of-year demand multipliers (1.0 = neutral). Index 1..12.
 _MONTH_FACTOR_US = {
     1: 0.70, 2: 0.85, 3: 0.95, 4: 1.00, 5: 1.05, 6: 1.00,

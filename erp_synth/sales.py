@@ -16,7 +16,6 @@ from .promotions import lookup_promo
 from .returns import maybe_generate_return
 from .seasonality import combined_multiplier
 
-
 HARD_MAX_INVOICES_PER_DAY = 50
 
 

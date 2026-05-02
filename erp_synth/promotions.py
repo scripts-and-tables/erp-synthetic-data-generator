@@ -9,7 +9,6 @@ import pandas as pd
 from .markets import holidays_for_year
 from .rng_utils import RNGs
 
-
 _GENERIC_PROMOS = [
     ("Spring Sale", 3, 14, 0.15),
     ("Summer Refresh", 6, 14, 0.20),

@@ -18,7 +18,6 @@ import pandas as pd
 from .customers import ACQUISITION_CHANNELS
 from .rng_utils import RNGs
 
-
 # Base monthly spend per channel in year 0 (USD), pre-growth and pre-holiday
 _CHANNEL_BASE_USD = {
     "ORGANIC":     200.0,    # SEO content / landing pages — small fixed cost

@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 EXPECTED_COLUMNS = {
     "items.csv": [
         "product_id", "product_name", "brand", "category", "subcategory",

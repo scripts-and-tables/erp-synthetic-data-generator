@@ -18,7 +18,6 @@ from typing import Any
 
 import pandas as pd
 
-
 # ==========================================================
 # UNIVERSE SETTINGS
 # - Defines the FULL possible catalog space (all combinations)

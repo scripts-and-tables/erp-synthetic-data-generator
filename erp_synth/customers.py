@@ -11,7 +11,6 @@ from faker import Faker
 from .cohorts import assign_cohort
 from .rng_utils import RNGs
 
-
 _OCCUPATIONS = [
     ("Professional", 0.30),
     ("Skilled Manual", 0.20),

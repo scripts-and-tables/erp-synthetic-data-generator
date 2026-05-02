@@ -8,16 +8,16 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.cohorts import assign_cohort
-from src.customers import generate_customers_df
-from src.items import build_items_universe_df, sample_items_dataset_df
-from src.marketing import build_marketing_spend_df
-from src.markets import MARKETS, get_market
-from src.promotions import build_promotions_df, build_promo_lookup
-from src.rng_utils import make_rngs
-from src.sales import generate_customer_sales
-from src.stores import build_stores_df
-from src.support import build_nps_surveys_df, build_support_tickets_df
+from erp_synth.cohorts import assign_cohort
+from erp_synth.customers import generate_customers_df
+from erp_synth.items import build_items_universe_df, sample_items_dataset_df
+from erp_synth.marketing import build_marketing_spend_df
+from erp_synth.markets import MARKETS, get_market
+from erp_synth.promotions import build_promo_lookup, build_promotions_df
+from erp_synth.rng_utils import make_rngs
+from erp_synth.sales import generate_customer_sales
+from erp_synth.stores import build_stores_df
+from erp_synth.support import build_nps_surveys_df, build_support_tickets_df
 
 
 def parse_args() -> argparse.Namespace:
@@ -86,8 +86,8 @@ def _items_index_from_df(df_items: pd.DataFrame) -> dict[int, dict]:
 
 
 def main() -> None:
-    print("data generation - started")
     args = parse_args()
+    print("data generation - started")
 
     rngs = make_rngs(args.seed)
     market_cfg = get_market(

@@ -15,7 +15,6 @@ from typing import Any
 
 import pandas as pd
 
-
 _TICKET_CHANNELS = [("Email", 0.40), ("Chat", 0.30), ("Phone", 0.20),
                     ("WhatsApp", 0.07), ("Social", 0.03)]
 _TICKET_CATEGORIES = [
