@@ -26,6 +26,12 @@ A configurable synthetic data generator for retail/CRM/ERP analytics. Designed t
 
 A single `python run.py` invocation produces an **AdventureWorks-style 6-table relational schema** — `items`, `customers`, `stores`, `promotions`, `invoice_headers`, and `sales_lines`. The numbers above are from the shipped sample (`output_csv/sample/`, seed 42, 1,000 customers × 11 years).
 
+<p align="center">
+  <img src="docs/branding/data_unfolds.gif" alt="11 years of monthly revenue unfolding frame by frame, with November/December holiday spikes flaring up as they arrive" width="100%" />
+</p>
+
+> Eleven years of monthly revenue, drawn frame by frame. Watch the November / December holiday spikes flare up year after year as the customer base ramps from 9 to 1,000.
+
 ### And the data tells a story
 
 ![Monthly revenue](docs/charts/monthly_revenue.png)
