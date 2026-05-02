@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/reproducible-100%25-22c55e?style=flat-square" alt="Reproducible">
 </p>
 
-A configurable synthetic data generator for retail/CRM/ERP analytics. Designed to look and feel like a real production dataset: invoice-level detail with line items, persistent customer cohorts, holiday seasonality, multi-market support (US / GCC / EU), promotions, returns, and inflation. Inspired by Microsoft's **AdventureWorks** schema and the **RetailSynth** behavioral simulator, packaged as a clean, dependency-light Python project.
+A configurable synthetic data generator for retail/CRM/ERP analytics. Designed to look and feel like a real production dataset: invoice-level detail with line items, persistent customer cohorts, holiday seasonality, multi-market support (US / GCC / EU), promotions, returns, and inflation. Inspired by Microsoft's **AdventureWorks** schema [[1](#references)] and the **RetailSynth** behavioral simulator [[2](#references)], with cohort dynamics anchored in the buy-till-you-die customer-base literature [[4](#references), [5](#references)] and the discrete choice framework that won McFadden the 2000 Nobel Prize in Economics [[6](#references), [8](#references)] — packaged as a clean, dependency-light Python project.
 
 ---
 
@@ -41,7 +41,7 @@ A single `python run.py` invocation produces an **AdventureWorks-style 6-table r
   <img src="docs/branding/features.png" alt="Six axes of realism" width="100%" />
 </p>
 
-Most public retail datasets are either tiny (Iris, Wine), tabular without behavior (Northwind), or behaviorally flat (uniform random orders). This one was designed from the ground up to be **statistically realistic** along the axes that matter for analytics work:
+Most public retail datasets are either tiny (Iris, Wine), tabular without behavior (Northwind), or behaviorally flat (uniform random orders). This one was designed from the ground up to be **statistically realistic** along the axes that the synthetic-retail-data evaluation literature identifies as critical for downstream AI tasks [[2](#references), [3](#references)]:
 
 | Axis | What's modeled |
 |---|---|
@@ -197,6 +197,14 @@ p_buy_day = clip(
 
 So a `LOYAL_HEAVY` customer on Black Friday in their fourth year buys with `p ≈ 31%`, while the same customer on a Tuesday in February buys with `p ≈ 8%`. The customer also has a sticky `brand_affinity` that filters their product pool toward one device family — so a "FreshNest" customer mostly buys FreshNest-compatible refills.
 
+### Theoretical foundations
+
+The cohort + lost-decision-date structure is a discrete-time analogue of the **buy-till-you-die** customer-base models of Fader, Hardie & Lee (BG/NBD) [[4](#references)] and their generalizations to non-contractual settings [[5](#references), [10](#references)] — every customer has a constant per-period probability of "dying" (becoming permanently lost) and an independent per-period probability of buying while alive. We replace their continuous-time gamma/beta mixtures with a discrete library of six cohort presets so the dataset is parameterizable by hand and inspectable line-by-line.
+
+The per-customer × per-product **price sensitivity** and **brand affinity** modulation comes from the multi-stage discrete-choice formulation in RetailSynth [[2](#references)], itself rooted in McFadden's conditional logit / mixed logit framework [[6](#references), [7](#references)] — the same framework that earned the 2000 Nobel Prize in Economics for "the development of theory and methods of analyzing discrete choice" [[8](#references)].
+
+The fidelity / utility / cohort-stickiness checks in [`scripts/verify.py`](scripts/verify.py) follow the comprehensive evaluation framework for synthetic retail data proposed by Xia et al. [[3](#references)].
+
 ---
 
 ## Architecture
@@ -313,11 +321,40 @@ Output
 
 ## References
 
-This project draws design lessons from:
+The design choices in this project are not arbitrary — each one is grounded in well-established work on retail data modeling, customer-base analysis, discrete choice theory, or synthetic-data evaluation. The mapping is summarized below; full citations follow.
 
-- **[AdventureWorks](https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure)** (Microsoft) — header / line invoice split, three-date model, slowly-changing product dimensions, rich `DimCustomer` demographics
-- **[RetailSynth](https://arxiv.org/abs/2312.14095)** (RetailMarketingAI) — customer-level latent variables, persistent price sensitivity, multi-stage purchase choice model
-- **["Comprehensive Evaluation of Synthetic Retail Data"](https://arxiv.org/abs/2406.13130)** — fidelity, utility, and privacy benchmarks for synthetic retail datasets
+| Design choice in this project | Anchored in |
+|---|---|
+| Star-schema split into `invoice_headers` + `sales_lines`; three dates per invoice (order/ship/due); rich `DimCustomer` demographics | AdventureWorks [1] |
+| Customer-level latent variables (`price_sensitivity`, `brand_affinity`); discount-aware multi-stage purchase model | RetailSynth (Xia et al. 2023) [2] |
+| Choice of fidelity / utility / cohort-stickiness checks in `verify.py` | Comprehensive Evaluation of Synthetic Retail Data (Xia et al. 2024) [3] |
+| Six "buy-till-you-die" cohorts with sticky lost-decision date and decaying yearly buy probability | BG/NBD and Pareto/NBD customer-base models (Fader, Hardie & Lee 2005; Fader & Hardie 2009) [4, 5] |
+| Per-customer × per-product price sensitivity → product choice; market-aware payment-method weighting | McFadden's conditional logit / mixed logit framework (1974, 2000) [6, 7]; McFadden Nobel lecture (2001) [8] |
+| Reproducibility-first generator — single `--seed` propagates to every RNG | Faker [9] + numpy + Python `random` |
+
+### Bibliography
+
+[1] **Microsoft.** *AdventureWorks Sample Databases.* SQL Server documentation. <https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure>
+
+[2] **Xia, Y., Arian, A., Narayanamoorthy, S., & Mabry, J.** (2023). *RetailSynth: Synthetic Data Generation for Retail AI Systems Evaluation.* arXiv:2312.14095. <https://arxiv.org/abs/2312.14095>
+
+[3] **Xia, Y., Wang, C.-H., Mabry, J., & Cheng, G.** (2024). *Advancing Retail Data Science: Comprehensive Evaluation of Synthetic Data.* arXiv:2406.13130. <https://arxiv.org/abs/2406.13130>
+
+[4] **Fader, P. S., Hardie, B. G. S., & Lee, K. L.** (2005). *"Counting Your Customers" the Easy Way: An Alternative to the Pareto/NBD Model.* Marketing Science, 24(2), 275–284. <https://www.brucehardie.com/papers/bgnbd_2004-04-20.pdf>
+
+[5] **Fader, P. S., & Hardie, B. G. S.** (2009). *Probability Models for Customer-Base Analysis.* Journal of Interactive Marketing, 23(1), 61–69. <https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Fader_hardie_jim_09.pdf>
+
+[6] **McFadden, D.** (1974). *Conditional Logit Analysis of Qualitative Choice Behavior.* In P. Zarembka (Ed.), Frontiers in Econometrics (pp. 105–142). Academic Press. <https://eml.berkeley.edu/reprints/mcfadden/zarembka.pdf>
+
+[7] **McFadden, D., & Train, K.** (2000). *Mixed MNL Models for Discrete Response.* Journal of Applied Econometrics, 15(5), 447–470. <https://pages.stern.nyu.edu/~wgreene/DiscreteChoice/Readings/McFadden-Train.pdf>
+
+[8] **McFadden, D.** (2001). *Economic Choices.* Nobel Lecture, December 8, 2000. <https://eml.berkeley.edu/~mcfadden/nobel/final-nobel.pdf>
+
+[9] **Faraglia, D. and others.** *Faker: Python package for fake data generation.* <https://faker.readthedocs.io/>
+
+[10] **Fader, P. S., Hardie, B. G. S., & Shang, J.** (2010). *Customer-Base Analysis in a Discrete-Time Noncontractual Setting.* Marketing Science, 29(6), 1086–1108. <https://www.brucehardie.com/papers/020/fader_et_al_mksc_10.pdf>
+
+A BibTeX file with all entries above is available at [`docs/REFERENCES.bib`](docs/REFERENCES.bib) for citation managers.
 
 ---
 
