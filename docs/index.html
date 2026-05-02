@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>erp-synth — synthetic retail data that feels real</title>
-<meta name="description" content="Realistic, multi-year retail datasets from a single Python command. Cohort behavior anchored in Nobel-winning discrete choice theory, AdventureWorks-style schema, multi-market, fully reproducible." />
+<meta name="description" content="Realistic, multi-year retail datasets in seconds. Cohort behavior anchored in Nobel-winning theory, AdventureWorks-style schema, multi-market, fully reproducible." />
 <meta property="og:title" content="erp-synth — synthetic retail data that feels real" />
-<meta property="og:description" content="Generate 100,000+ rows of realistic retail data across 9 relational tables in 70 seconds. Scientifically grounded, fully customizable, byte-reproducible." />
+<meta property="og:description" content="Generate 100,000+ rows of realistic retail data across 9 relational tables in seconds. Scientifically grounded, fully customizable, byte-reproducible." />
 <meta property="og:image" content="branding/hero.png" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
@@ -34,10 +34,17 @@
   --grad-orange: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
   --grad-blue:   linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
 }
-* { box-sizing: border-box; }
+
+/* -- universal anti-overflow safety net -- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+}
 html { scroll-behavior: smooth; }
 body {
-  margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
@@ -45,34 +52,20 @@ body {
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
+img, svg, video { max-width: 100%; height: auto; display: block; }
 a { color: var(--primary); text-decoration: none; }
 a:hover { color: var(--accent-2); }
-img { max-width: 100%; display: block; }
-code, pre, .mono {
-  font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+/* Container with safe padding on mobile */
+.container {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 24px;
 }
-code {
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  padding: 2px 7px;
-  border-radius: 5px;
-  font-size: 0.92em;
-  color: var(--accent-2);
-}
-pre {
-  background: var(--bg-soft);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  overflow-x: auto;
-  line-height: 1.55;
-  font-size: 13.5px;
-  color: var(--text-2);
-}
-pre code { background: transparent; border: 0; padding: 0; color: inherit; }
-.container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+@media (max-width: 480px) { .container { padding: 0 18px; } }
 
 /* ========== NAV ========== */
 nav.top {
@@ -85,38 +78,47 @@ nav.top {
 nav.top .row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 24px; max-width: var(--max); margin: 0 auto;
+  gap: 12px;
 }
 nav.top .brand {
   font-weight: 800; font-size: 16px; color: var(--text);
   display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
+  flex-shrink: 0;
 }
 nav.top .brand .dot {
   width: 12px; height: 12px; border-radius: 50%;
   background: var(--grad-orange);
   box-shadow: 0 0 16px rgba(249, 115, 22, 0.7);
 }
-nav.top .links { display: flex; gap: 26px; font-size: 14px; }
+nav.top .links {
+  display: flex; gap: 22px; font-size: 14px;
+  margin-left: auto; margin-right: 16px;
+}
 nav.top .links a { color: var(--text-dim); font-weight: 500; }
 nav.top .links a:hover { color: var(--text); }
 nav.top .cta {
   background: var(--grad-orange); color: #0a0e1a !important;
   padding: 8px 16px; border-radius: 8px; font-weight: 700;
   font-size: 14px; transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap; flex-shrink: 0;
 }
 nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rgba(249, 115, 22, 0.6); }
 @media (max-width: 760px) { nav.top .links { display: none; } }
+@media (max-width: 480px) {
+  nav.top .row { padding: 12px 18px; }
+  nav.top .cta { padding: 7px 12px; font-size: 13px; }
+}
 
 /* ========== HERO ========== */
 .hero {
   position: relative;
-  padding: 80px 0 60px;
+  padding: 70px 0 60px;
   overflow: hidden;
   background:
     radial-gradient(60% 50% at 20% 0%, rgba(56, 189, 248, 0.10), transparent 70%),
     radial-gradient(50% 50% at 90% 30%, rgba(249, 115, 22, 0.10), transparent 70%);
 }
 .hero::before {
-  /* subtle grid */
   content: ""; position: absolute; inset: 0;
   background-image:
     linear-gradient(var(--border) 1px, transparent 1px),
@@ -134,18 +136,20 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   color: var(--primary);
   font-size: 13px; font-weight: 600;
   margin-bottom: 22px;
+  max-width: 100%;
 }
 .hero .pill .new {
   background: var(--grad-orange); color: #0a0e1a;
   padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800;
 }
 .hero h1 {
-  font-size: clamp(40px, 6.5vw, 72px);
+  font-size: clamp(34px, 6vw, 72px);
   line-height: 1.04;
   margin: 0 0 22px;
   letter-spacing: -0.025em;
   font-weight: 800;
   max-width: 900px;
+  overflow-wrap: break-word;
 }
 .hero h1 .grad {
   background: var(--grad-orange);
@@ -154,17 +158,21 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   color: transparent;
 }
 .hero .tagline {
-  font-size: clamp(17px, 1.7vw, 21px);
+  font-size: clamp(16px, 1.7vw, 21px);
   color: var(--text-2);
   margin: 0 0 36px;
   max-width: 780px;
   line-height: 1.55;
+  overflow-wrap: break-word;
 }
-.hero .ctas { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 38px; }
+.hero .ctas {
+  display: flex; gap: 14px; flex-wrap: wrap;
+}
 .hero .ctas a {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 14px 26px; border-radius: 10px; font-weight: 700;
   font-size: 15px; transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
 }
 .hero .ctas a:hover { transform: translateY(-2px); }
 .hero .ctas .primary {
@@ -177,20 +185,14 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   border: 1px solid var(--border-2);
 }
 .hero .ctas .secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--text-mute); }
-.hero .install-line {
-  font-size: 13px; color: var(--text-dim);
-  display: inline-flex; align-items: center; gap: 12px;
-  background: var(--bg-soft); border: 1px solid var(--border);
-  padding: 10px 16px; border-radius: 8px;
-  font-family: ui-monospace, monospace;
+@media (max-width: 480px) {
+  .hero { padding: 50px 0 40px; }
+  .hero .ctas { flex-direction: column; align-items: stretch; }
+  .hero .ctas a { justify-content: center; padding: 13px 20px; }
 }
-.hero .install-line .prompt { color: var(--accent); user-select: none; }
 
-/* ========== DEVICES (browser frame + 3 phones) ========== */
-.devices {
-  position: relative;
-  margin: 60px 0 0;
-}
+/* ========== DEVICES ========== */
+.devices { position: relative; margin: 60px 0 0; }
 .browser {
   background: var(--bg-card);
   border-radius: var(--radius);
@@ -207,23 +209,26 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   background: var(--bg-2); padding: 12px 16px;
   display: flex; align-items: center; gap: 8px;
   border-bottom: 1px solid var(--border);
+  min-width: 0;
 }
-.browser .dot {
-  width: 12px; height: 12px; border-radius: 50%;
-}
+.browser .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 .browser .dot.r { background: #ff5f57; }
 .browser .dot.y { background: #ffbd2e; }
 .browser .dot.g { background: #28ca42; }
 .browser .url {
-  margin-left: 18px; flex: 1; max-width: 360px;
+  margin-left: 14px; flex: 1; min-width: 0;
   background: var(--bg-soft); padding: 5px 14px;
   border-radius: 6px;
   color: var(--text-dim); font-size: 12px;
   font-family: ui-monospace, monospace;
   border: 1px solid var(--border);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .browser .url::before { content: "🔒  "; color: var(--good); }
 .browser .body img { width: 100%; display: block; background: #0b1220; }
+@media (max-width: 480px) {
+  .browser .url { display: none; }
+}
 
 .phone-row {
   display: flex; justify-content: center; align-items: flex-end;
@@ -231,10 +236,11 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   position: relative; z-index: 1;
   perspective: 1400px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 .phone {
   --pw: 220px; --ph: 440px;
-  width: var(--pw); height: var(--ph);
+  width: var(--pw); height: var(--ph); max-width: 100%;
   background: linear-gradient(155deg, #1f2a4a 0%, #0d1428 100%);
   border-radius: 38px;
   padding: 9px;
@@ -279,17 +285,17 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   background: linear-gradient(180deg, transparent, rgba(56, 189, 248, 0.04));
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 40px 0;
-  margin-top: 80px;
+  padding: 40px 0; margin-top: 80px;
 }
 .stats-bar .grid {
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px;
   text-align: center;
 }
+.stats-bar .grid > div { min-width: 0; }
 @media (max-width: 800px) { .stats-bar .grid { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
-@media (max-width: 480px) { .stats-bar .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .stats-bar .grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
 .stats-bar .num {
-  font-size: clamp(24px, 3vw, 34px);
+  font-size: clamp(22px, 3vw, 34px);
   font-weight: 800; letter-spacing: -0.02em;
   background: var(--grad-orange);
   -webkit-background-clip: text;
@@ -297,27 +303,32 @@ nav.top .cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rg
   color: transparent;
 }
 .stats-bar .lbl {
-  font-size: 12.5px; color: var(--text-dim);
+  font-size: 12px; color: var(--text-dim);
   text-transform: uppercase; letter-spacing: 0.05em;
   font-weight: 600; margin-top: 4px;
 }
 
 /* ========== SECTIONS ========== */
 section { padding: 100px 0; position: relative; }
+@media (max-width: 600px) { section { padding: 64px 0; } }
 section h2 {
-  font-size: clamp(28px, 3.6vw, 40px);
+  font-size: clamp(26px, 3.6vw, 40px);
   margin: 0 0 14px; letter-spacing: -0.02em;
   font-weight: 800;
+  overflow-wrap: break-word;
 }
 section h2 .grad {
   background: var(--grad-blue);
-  -webkit-background-clip: text;
-  background-clip: text;
+  -webkit-background-clip: text; background-clip: text;
   color: transparent;
 }
 section .lead {
   color: var(--text-dim); margin: 0 0 50px;
-  font-size: 18px; max-width: 720px;
+  font-size: 17px; max-width: 720px;
+  overflow-wrap: break-word;
+}
+@media (max-width: 600px) {
+  section .lead { font-size: 15px; margin-bottom: 36px; }
 }
 section .eyebrow {
   font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em;
@@ -329,6 +340,7 @@ section .eyebrow {
 .features-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
 }
+.features-grid > * { min-width: 0; }
 @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
 .feature {
@@ -346,8 +358,7 @@ section .eyebrow {
 }
 .feature::after {
   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--grad-orange);
-  opacity: 0.85;
+  background: var(--grad-orange); opacity: 0.85;
 }
 .feature .icon-wrap {
   width: 44px; height: 44px; border-radius: 11px;
@@ -355,49 +366,61 @@ section .eyebrow {
   margin-bottom: 18px;
   font-size: 22px; font-weight: 800; color: #0a0e1a;
 }
-.feature.f1 .icon-wrap { background: var(--grad-orange); }
-.feature.f2 .icon-wrap { background: var(--accent-2); }
-.feature.f3 .icon-wrap { background: var(--good); }
-.feature.f4 .icon-wrap { background: var(--primary); }
-.feature.f5 .icon-wrap { background: var(--primary-2); }
-.feature.f6 .icon-wrap { background: var(--bad); }
-.feature.f1::after { background: var(--grad-orange); }
-.feature.f2::after { background: var(--accent-2); }
-.feature.f3::after { background: var(--good); }
-.feature.f4::after { background: var(--primary); }
-.feature.f5::after { background: var(--primary-2); }
-.feature.f6::after { background: var(--bad); }
+.feature.f1 .icon-wrap, .feature.f1::after { background: var(--grad-orange); }
+.feature.f2 .icon-wrap, .feature.f2::after { background: var(--accent-2); }
+.feature.f3 .icon-wrap, .feature.f3::after { background: var(--good); }
+.feature.f4 .icon-wrap, .feature.f4::after { background: var(--primary); }
+.feature.f5 .icon-wrap, .feature.f5::after { background: var(--primary-2); }
+.feature.f6 .icon-wrap, .feature.f6::after { background: var(--bad); }
 .feature h3 { margin: 0 0 10px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
 .feature p { margin: 0; color: var(--text-dim); font-size: 15px; line-height: 1.6; }
 .feature p strong { color: var(--text-2); font-weight: 600; }
 
 /* ========== HOW IT WORKS ========== */
 .how {
-  background:
-    radial-gradient(60% 60% at 50% 0%, rgba(56, 189, 248, 0.05), transparent 70%);
+  background: radial-gradient(60% 60% at 50% 0%, rgba(56, 189, 248, 0.05), transparent 70%);
 }
 .steps {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
   position: relative;
 }
+.steps > * { min-width: 0; }
 @media (max-width: 800px) { .steps { grid-template-columns: 1fr; } }
 .step {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 28px;
+  padding: 32px 28px;
   position: relative;
+  transition: transform 0.2s, border-color 0.2s;
 }
-.step .n {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--bg-soft); border: 1px solid var(--border-2);
+.step:hover { transform: translateY(-4px); border-color: var(--text-mute); }
+.step .step-icon {
+  width: 56px; height: 56px; border-radius: 14px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 800; color: var(--accent); font-size: 15px;
-  margin-bottom: 16px;
+  font-size: 28px; font-weight: 800; color: #0a0e1a;
+  margin-bottom: 20px;
 }
-.step h3 { margin: 0 0 10px; font-size: 19px; }
-.step p { margin: 0 0 14px; color: var(--text-dim); font-size: 14.5px; }
-.step pre { margin: 0; font-size: 12.5px; padding: 12px 14px; }
+.step.s1 .step-icon { background: var(--primary); }
+.step.s2 .step-icon { background: var(--grad-orange); }
+.step.s3 .step-icon { background: var(--good); }
+.step .n {
+  display: inline-block; font-size: 12px; font-weight: 800;
+  letter-spacing: 0.12em; color: var(--text-mute);
+  margin-bottom: 6px;
+}
+.step h3 { margin: 0 0 12px; font-size: 22px; letter-spacing: -0.01em; }
+.step p { margin: 0; color: var(--text-dim); font-size: 15px; line-height: 1.6; }
+
+.dev-link {
+  text-align: center;
+  margin-top: 36px; padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.dev-link a {
+  color: var(--accent-2); font-weight: 600; font-size: 14.5px;
+}
+.dev-link a:hover { color: var(--text); }
 
 /* ========== USE CASES ========== */
 .usecases {
@@ -414,6 +437,7 @@ section .eyebrow {
 .usecase:hover { border-color: var(--accent); color: var(--text); }
 .usecase .dot {
   width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  flex-shrink: 0;
 }
 
 /* ========== FINAL CTA ========== */
@@ -423,24 +447,26 @@ section .eyebrow {
     var(--bg-card);
   border: 1px solid var(--border-2);
   border-radius: var(--radius);
-  padding: 70px 40px;
-  text-align: center;
-  margin: 0 auto;
-  max-width: 900px;
+  padding: 70px 40px; text-align: center;
+  margin: 0 auto; max-width: 900px;
 }
+@media (max-width: 600px) { .final-cta { padding: 50px 24px; } }
 .final-cta h2 {
-  font-size: clamp(28px, 3.5vw, 40px); margin: 0 0 14px;
+  font-size: clamp(26px, 3.5vw, 40px); margin: 0 0 14px;
   letter-spacing: -0.02em;
 }
 .final-cta p {
-  color: var(--text-dim); margin: 0 0 30px; font-size: 17px;
-  max-width: 560px; margin-left: auto; margin-right: auto;
+  color: var(--text-dim); margin: 0 auto 30px; font-size: 17px;
+  max-width: 560px;
 }
-.final-cta .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.final-cta .ctas {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
 .final-cta .ctas a {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px;
   transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
 }
 .final-cta .ctas a:hover { transform: translateY(-2px); }
 .final-cta .ctas .primary {
@@ -451,21 +477,22 @@ section .eyebrow {
   background: transparent; color: var(--text);
   border: 1px solid var(--border-2);
 }
+@media (max-width: 480px) {
+  .final-cta .ctas { flex-direction: column; align-items: stretch; }
+  .final-cta .ctas a { justify-content: center; }
+}
 
 /* ========== FOOTER ========== */
 footer {
   border-top: 1px solid var(--border);
-  padding: 36px 0;
-  font-size: 13px; color: var(--text-mute);
+  padding: 36px 0; font-size: 13px; color: var(--text-mute);
   margin-top: 80px;
 }
 footer .row {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 16px;
 }
-footer .stack {
-  display: flex; flex-wrap: wrap; gap: 6px;
-}
+footer .stack { display: flex; flex-wrap: wrap; gap: 6px; }
 footer .stack span {
   padding: 3px 10px; border-radius: 999px;
   background: var(--bg-card); border: 1px solid var(--border);
@@ -475,7 +502,6 @@ footer .stack span {
 </head>
 <body>
 
-<!-- ========== NAV ========== -->
 <nav class="top">
   <div class="row">
     <div class="brand"><span class="dot"></span> erp-synth</div>
@@ -490,46 +516,40 @@ footer .stack span {
 </nav>
 
 <!-- ========== HERO ========== -->
-<section class="hero" style="padding-top:70px;">
+<section class="hero">
   <div class="container">
-    <span class="pill"><span class="new">v0.2</span> Now with marketing spend, support tickets, and NPS</span>
+    <span class="pill"><span class="new">v0.2</span> Now with marketing spend, support tickets and NPS</span>
     <h1>Synthetic retail data <span class="grad">that feels real.</span></h1>
-    <p class="tagline">Generate <strong>100,000+ rows</strong> of realistic, multi-year retail data across 9 relational tables — in 70 seconds, from a single Python command. AdventureWorks-style schema, Nobel-winning cohort theory, fully reproducible.</p>
+    <p class="tagline">Generate hundreds of thousands of rows of realistic, multi-year retail data — across nine fully-relational tables — in seconds. AdventureWorks-style schema, scientifically grounded customer behavior, fully reproducible.</p>
 
     <div class="ctas">
-      <a class="primary" href="#how">▶ Get started in 30 seconds</a>
+      <a class="primary" href="technical.html#quick-start">▶ Get started</a>
       <a class="secondary" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">View on GitHub →</a>
     </div>
 
-    <div class="install-line">
-      <span class="prompt">$</span> pip install -e ".[charts]" &nbsp;&nbsp;<span style="color:var(--text-mute)">→</span>&nbsp;&nbsp; erp-synth --seed 42 --n-customers 1000
-    </div>
-
-    <!-- Browser frame with the GIF -->
     <div class="devices">
       <div class="browser">
         <div class="titlebar">
           <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-          <span class="url">scripts-and-tables.github.io/erp-synthetic-data-generator/</span>
+          <span class="url">scripts-and-tables.github.io/erp-synthetic-data-generator</span>
         </div>
         <div class="body">
-          <img src="branding/data_unfolds.gif" alt="11 years of monthly revenue unfolding frame by frame, with November and December holiday spikes flaring up as they arrive" />
+          <img src="branding/data_unfolds.gif" alt="Eleven years of monthly revenue unfolding frame by frame, with November and December holiday spikes flaring up as they arrive" />
         </div>
       </div>
 
-      <!-- Phone row -->
       <div class="phone-row">
         <div class="phone left">
           <div class="notch"></div>
-          <div class="screen"><img src="branding/phone_revenue.png" alt="Sales pulse: $2.20M last 12 months, +3.4% YoY, monthly revenue with holiday spikes" /></div>
+          <div class="screen"><img src="branding/phone_revenue.png" alt="Sales pulse: $2.20M last 12 months, with year-over-year growth and monthly revenue including holiday spikes" /></div>
         </div>
         <div class="phone center">
           <div class="notch"></div>
-          <div class="screen"><img src="branding/phone_cohorts.png" alt="Cohort health: 1,000 customers across 6 behavioral segments, sticky cohort assignment" /></div>
+          <div class="screen"><img src="branding/phone_cohorts.png" alt="Cohort health: 1,000 customers across 6 behavioral segments with sticky cohort assignment" /></div>
         </div>
         <div class="phone right">
           <div class="notch"></div>
-          <div class="screen"><img src="branding/phone_markets.png" alt="Markets out of the box: US/USD/8.75% VAT/Black Friday, GCC/AED/5% VAT/Ramadan+Eid, EU/EUR/20% VAT/Boxing Week" /></div>
+          <div class="screen"><img src="branding/phone_markets.png" alt="Markets out of the box: US, GCC, EU presets with currency, VAT rate, weekend definition, and holidays" /></div>
         </div>
       </div>
     </div>
@@ -540,7 +560,7 @@ footer .stack span {
 <div class="stats-bar">
   <div class="container">
     <div class="grid">
-      <div><div class="num">100k+</div><div class="lbl">Rows in 70s</div></div>
+      <div><div class="num">100k+</div><div class="lbl">Rows in seconds</div></div>
       <div><div class="num">9</div><div class="lbl">Relational tables</div></div>
       <div><div class="num">11 yrs</div><div class="lbl">Default horizon</div></div>
       <div><div class="num">3</div><div class="lbl">Markets preset</div></div>
@@ -561,32 +581,32 @@ footer .stack span {
       <div class="feature f1">
         <div class="icon-wrap">⚡</div>
         <h3>Massive volume, instantly</h3>
-        <p>Generate <strong>100,000+ sales lines across 9 tables in 70 seconds</strong>. Streaming CSV writes mean memory stays flat — push to millions of rows on a laptop without OOM.</p>
+        <p>Generate <strong>hundreds of thousands of sales lines across nine relational tables in seconds</strong>. Streaming output keeps memory flat — push to millions of rows on a laptop without breaking a sweat.</p>
       </div>
       <div class="feature f2">
         <div class="icon-wrap">★</div>
         <h3>Scientifically grounded</h3>
-        <p>Cohort behavior anchored in <strong>Fader-Hardie buy-till-you-die</strong> models. Discrete choice from McFadden's Nobel-winning framework. Schema follows Microsoft AdventureWorks. <a href="technical.html#references">10 cited papers</a>.</p>
+        <p>Cohort behavior anchored in <strong>buy-till-you-die customer-base models</strong> from the marketing-science literature. Discrete choice from McFadden's Nobel-winning framework. Schema follows Microsoft AdventureWorks. <strong>Ten cited papers.</strong></p>
       </div>
       <div class="feature f3">
         <div class="icon-wrap">⚙</div>
         <h3>Highly customizable</h3>
-        <p><strong>20+ CLI flags</strong> control market, seasonality, inflation rate, returns probability, promotion frequency, customer field missingness, basket composition. Every knob you'd want.</p>
+        <p><strong>Twenty-plus controls</strong> over market, seasonality, inflation rate, returns probability, promotion frequency, customer field completeness, basket composition. Every realism axis has a knob.</p>
       </div>
       <div class="feature f4">
         <div class="icon-wrap">↗</div>
         <h3>Unlimited data export</h3>
-        <p>Plain CSV. Works with <strong>pandas, Excel, Power BI, Tableau, dbt, DuckDB, Postgres, Snowflake</strong> — anything that reads a delimited file. No vendor lock-in. No row caps.</p>
+        <p>Plain CSV. Works with <strong>pandas, Excel, Power BI, Tableau, dbt, DuckDB, Postgres, Snowflake</strong> — anything that reads a delimited file. No vendor lock-in. No row caps. No throttling.</p>
       </div>
       <div class="feature f5">
         <div class="icon-wrap">🌍</div>
         <h3>Multi-market by design</h3>
-        <p><strong>US, GCC, EU presets</strong> out of the box. Locale, currency, VAT, weekend definition (Sat/Sun vs Fri/Sat), payment methods, Eid + Black Friday + Boxing Week — all swappable per market.</p>
+        <p><strong>US, GCC, and EU presets</strong> out of the box. Locale, currency, VAT, weekend (Sat/Sun vs Fri/Sat), payment methods, plus market-specific holiday calendars (Black Friday, Christmas, Ramadan, Eid, Boxing Week) — all swappable.</p>
       </div>
       <div class="feature f6">
         <div class="icon-wrap">⟲</div>
         <h3>Reproducible to the byte</h3>
-        <p>Single <code>--seed</code> flag drives every RNG. Run twice → <strong>identical CSVs, sha256 match</strong>. CI checks this on every push. Your demos won't drift.</p>
+        <p>One seed value drives every random number in the system. Run twice → <strong>identical CSVs, byte-for-byte</strong>. Continuous integration verifies this on every push. Your demos won't drift.</p>
       </div>
     </div>
   </div>
@@ -595,38 +615,33 @@ footer .stack span {
 <!-- ========== HOW IT WORKS ========== -->
 <section id="how" class="how">
   <div class="container">
-    <div class="eyebrow">three commands</div>
-    <h2>From zero to <span class="grad">100,000 rows</span> in 30 seconds.</h2>
-    <p class="lead">No accounts, no API keys, no cloud setup. Pure Python, pure CSV out, pure determinism.</p>
+    <div class="eyebrow">three steps</div>
+    <h2>From zero to <span class="grad">production-grade data</span> in one workflow.</h2>
+    <p class="lead">No accounts, no API keys, no cloud setup, no NDAs. Pure Python, pure CSV out, pure determinism.</p>
 
     <div class="steps">
-      <div class="step">
-        <div class="n">1</div>
-        <h3>Install</h3>
-        <p>Editable install with the <code>charts</code> extra brings in matplotlib for visualization scripts.</p>
-<pre><code>git clone https://github.com/scripts-and-tables/erp-synthetic-data-generator
-cd erp-synthetic-data-generator
-pip install -e ".[charts]"</code></pre>
+      <div class="step s1">
+        <div class="step-icon">⚙</div>
+        <span class="n">STEP 01</span>
+        <h3>Configure</h3>
+        <p>Pick a market — US, GCC or EU. Set a date range. Decide how many customers, products, stores, and promotions you want. Every realism axis comes with a sensible default and an override.</p>
       </div>
-      <div class="step">
-        <div class="n">2</div>
+      <div class="step s2">
+        <div class="step-icon">⚡</div>
+        <span class="n">STEP 02</span>
         <h3>Generate</h3>
-        <p>Pick a market, a date range, and a scale. The <code>erp-synth</code> CLI handles the rest.</p>
-<pre><code>erp-synth --seed 42 --market us \
-          --n-customers 1000 \
-          --date-from 2015-01-01 \
-          --date-till 2025-12-31</code></pre>
+        <p>Realistic, multi-year retail data fans out across nine fully-relational tables in seconds. Streaming output keeps memory flat, so generating millions of rows on a laptop is routine.</p>
       </div>
-      <div class="step">
-        <div class="n">3</div>
+      <div class="step s3">
+        <div class="step-icon">↗</div>
+        <span class="n">STEP 03</span>
         <h3>Analyze</h3>
-        <p>Open in pandas, pipe into your warehouse, or load into Power BI. 9 fully-relational CSVs, ready to query.</p>
-<pre><code>import pandas as pd
-
-lines = pd.read_csv("output_csv/sales_lines.csv")
-hdrs  = pd.read_csv("output_csv/invoice_headers.csv")
-# ... your analysis here</code></pre>
+        <p>Plug straight into pandas, Power BI, Tableau, dbt, DuckDB, your warehouse — anything that reads CSV. No vendor lock-in, no row caps. The data is yours, forever, byte-reproducible.</p>
       </div>
+    </div>
+
+    <div class="dev-link">
+      <a href="technical.html#quick-start">→ Developers, jump to the technical quick-start</a>
     </div>
   </div>
 </section>
@@ -644,12 +659,12 @@ hdrs  = pd.read_csv("output_csv/invoice_headers.csv")
       <span class="usecase"><span class="dot"></span> Cohort &amp; churn modeling</span>
       <span class="usecase"><span class="dot"></span> Data engineering portfolios</span>
       <span class="usecase"><span class="dot"></span> Pricing &amp; promo experiments</span>
-      <span class="usecase"><span class="dot"></span> dbt / warehouse staging</span>
+      <span class="usecase"><span class="dot"></span> dbt &amp; warehouse staging</span>
       <span class="usecase"><span class="dot"></span> SQL teaching material</span>
       <span class="usecase"><span class="dot"></span> Synthetic-data benchmarks</span>
       <span class="usecase"><span class="dot"></span> Vendor demo datasets</span>
       <span class="usecase"><span class="dot"></span> RFM segmentation</span>
-      <span class="usecase"><span class="dot"></span> CAC / LTV analysis</span>
+      <span class="usecase"><span class="dot"></span> CAC &amp; LTV analysis</span>
       <span class="usecase"><span class="dot"></span> NPS &amp; CSAT pipelines</span>
     </div>
   </div>
@@ -660,16 +675,15 @@ hdrs  = pd.read_csv("output_csv/invoice_headers.csv")
   <div class="container">
     <div class="final-cta">
       <h2>Ready to see the data?</h2>
-      <p>One command, 70 seconds, 100,000+ rows. Or browse the <a href="technical.html">technical deep-dive</a> for the full schema, cohort math, and bibliography.</p>
+      <p>One workflow, a few seconds, hundreds of thousands of rows. Or browse the technical deep-dive for the schema, cohort math, and bibliography.</p>
       <div class="ctas">
         <a class="primary" href="https://github.com/scripts-and-tables/erp-synthetic-data-generator">⭐ Get it on GitHub</a>
-        <a class="secondary" href="technical.html">📖 Read the tech docs</a>
+        <a class="secondary" href="technical.html">📖 Technical docs</a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== FOOTER ========== -->
 <footer>
   <div class="container row">
     <div class="stack">

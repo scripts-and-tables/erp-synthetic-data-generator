@@ -29,10 +29,12 @@
   --grad-orange: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
   --grad-blue:   linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
 }
-* { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; width: 100%; max-width: 100vw; overflow-x: clip;
+}
 html { scroll-behavior: smooth; }
 body {
-  margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
@@ -41,7 +43,7 @@ body {
 }
 a { color: var(--primary); text-decoration: none; }
 a:hover { color: var(--accent-2); }
-img { max-width: 100%; display: block; }
+img, svg, video { max-width: 100%; height: auto; display: block; }
 code, pre {
   font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
 }
@@ -49,15 +51,25 @@ code {
   background: var(--bg-soft); border: 1px solid var(--border);
   padding: 2px 7px; border-radius: 5px; font-size: 0.92em;
   color: var(--accent-2);
+  word-break: break-word;
 }
 pre {
   background: var(--bg-soft); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 18px 20px;
-  overflow-x: auto; line-height: 1.55; font-size: 13.5px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  line-height: 1.55; font-size: 13.5px;
   color: var(--text-2);
 }
-pre code { background: transparent; border: 0; padding: 0; color: inherit; }
-.container { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+pre code { background: transparent; border: 0; padding: 0; color: inherit; word-break: normal; }
+.container {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (max-width: 480px) { .container { padding: 0 18px; } }
 hr { border: 0; border-top: 1px solid var(--border); margin: 60px 0; }
 
 /* ===== nav ===== */
@@ -167,11 +179,31 @@ table.tbl code { font-size: 12.5px; }
 .c-churn   { background: var(--bad); color: #fff; }
 .c-once    { background: var(--text-mute); }
 
+/* ===== quick-start grid ===== */
+.qs-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+  margin-top: 24px;
+}
+.qs-grid > * { min-width: 0; }
+@media (max-width: 800px) { .qs-grid { grid-template-columns: 1fr; } }
+.qs-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+}
+.qs-card .lbl {
+  font-size: 11.5px; color: var(--text-mute);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 700; margin-bottom: 10px;
+}
+.qs-card h3 { margin: 0 0 12px; font-size: 17px; letter-spacing: -0.01em; }
+.qs-card pre { margin: 0; font-size: 12.5px; padding: 14px 16px; }
+
 /* ===== charts gallery ===== */
 .charts {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
   margin-top: 24px;
 }
+.charts > * { min-width: 0; }
 @media (max-width: 720px) { .charts { grid-template-columns: 1fr; } }
 .chart {
   background: var(--bg-card); border: 1px solid var(--border);
@@ -226,6 +258,7 @@ footer .row {
     <p class="lead">Every realism axis maps to a published model or a canonical reference. This page documents the schema, the customer behavior formula, the architecture, the full CLI, and the academic bibliography behind each design choice.</p>
 
     <div class="toc">
+      <a href="#quick-start"><span class="num">00</span> Quick start (30 seconds)</a>
       <a href="#schema"><span class="num">01</span> Schema (9 tables)</a>
       <a href="#cohort"><span class="num">02</span> Customer behavior model</a>
       <a href="#design-mapping"><span class="num">03</span> Design → literature mapping</a>
@@ -237,6 +270,49 @@ footer .row {
     </div>
   </div>
 </header>
+
+<section id="quick-start">
+  <div class="container">
+    <h2>Quick start <span style="color:var(--text-mute); font-weight:600; font-size:0.7em;">— 30 seconds</span></h2>
+    <p class="lead">Three commands. No accounts, no API keys, no cloud setup.</p>
+    <div class="qs-grid">
+      <div class="qs-card">
+        <div class="lbl">Step 1 · Install</div>
+        <h3>Editable, with charts</h3>
+<pre><code>git clone https://github.com/scripts-and-tables/\
+erp-synthetic-data-generator
+cd erp-synthetic-data-generator
+pip install -e ".[charts]"</code></pre>
+      </div>
+      <div class="qs-card">
+        <div class="lbl">Step 2 · Generate</div>
+        <h3>One reproducible command</h3>
+<pre><code>erp-synth \
+  --seed 42 \
+  --market us \
+  --n-customers 1000 \
+  --date-from 2015-01-01 \
+  --date-till 2025-12-31</code></pre>
+      </div>
+      <div class="qs-card">
+        <div class="lbl">Step 3 · Analyze</div>
+        <h3>Plug into pandas</h3>
+<pre><code>import pandas as pd
+
+lines   = pd.read_csv(
+  "output_csv/sales_lines.csv")
+headers = pd.read_csv(
+  "output_csv/invoice_headers.csv")</code></pre>
+      </div>
+    </div>
+    <p style="margin-top:28px; color:var(--text-dim); font-size:14.5px;">
+      The full CLI surface is documented in <a href="#cli">section 6</a>. To verify a freshly generated dataset:
+      <code>python scripts/verify.py output_csv</code>.
+    </p>
+  </div>
+</section>
+
+<hr>
 
 <section id="schema">
   <div class="container">
