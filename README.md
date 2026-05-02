@@ -1,22 +1,29 @@
-# 🛒 ERP Synthetic Data Generator
+<p align="center">
+  <img src="docs/branding/hero.png" alt="ERP Synthetic Data Generator" width="100%" />
+</p>
 
-> **Realistic, multi-year, AdventureWorks-style retail data — generated from a single Python command, fully reproducible from a seed.**
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square" alt="Python"></a>
+  <a href="https://pandas.pydata.org/"><img src="https://img.shields.io/badge/pandas-2.x-150458?style=flat-square" alt="pandas"></a>
+  <a href="https://numpy.org/"><img src="https://img.shields.io/badge/numpy-2.x-013243?style=flat-square" alt="numpy"></a>
+  <a href="https://faker.readthedocs.io/"><img src="https://img.shields.io/badge/Faker-40-orange?style=flat-square" alt="Faker"></a>
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/reproducible-100%25-22c55e?style=flat-square" alt="Reproducible">
+</p>
 
 A configurable synthetic data generator for retail/CRM/ERP analytics. Designed to look and feel like a real production dataset: invoice-level detail with line items, persistent customer cohorts, holiday seasonality, multi-market support (US / GCC / EU), promotions, returns, and inflation. Inspired by Microsoft's **AdventureWorks** schema and the **RetailSynth** behavioral simulator, packaged as a clean, dependency-light Python project.
 
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/) [![pandas](https://img.shields.io/badge/pandas-2.x-150458)](https://pandas.pydata.org/) [![numpy](https://img.shields.io/badge/numpy-2.x-013243)](https://numpy.org/) [![Faker](https://img.shields.io/badge/Faker-40-orange)](https://faker.readthedocs.io/) [![License](https://img.shields.io/badge/license-MIT-green)]()
-
 ---
 
-## 📊 What it generates (in 60 seconds)
+## What it generates
 
-A single `python run.py` invocation produces an **AdventureWorks-style 6-table relational schema**:
+<p align="center">
+  <img src="docs/branding/stats_strip.png" alt="Headline stats from the shipped 1k×11y sample" width="100%" />
+</p>
 
-| 1,000 customers | 100,627 sales lines | 11 years | $10.4M gross revenue |
-|:-:|:-:|:-:|:-:|
-| 98 SKUs across 4 categories | 52,620 invoices + 1,480 returns | 8 stores · 66 promotions | 65% gross margin |
+A single `python run.py` invocation produces an **AdventureWorks-style 6-table relational schema** — `items`, `customers`, `stores`, `promotions`, `invoice_headers`, and `sales_lines`. The numbers above are from the shipped sample (`output_csv/sample/`, seed 42, 1,000 customers × 11 years).
 
-### The numbers tell a story
+### And the data tells a story
 
 ![Monthly revenue](docs/charts/monthly_revenue.png)
 
@@ -28,7 +35,11 @@ A single `python run.py` invocation produces an **AdventureWorks-style 6-table r
 
 ---
 
-## 🎯 Why this project is different
+## Why this project is different
+
+<p align="center">
+  <img src="docs/branding/features.png" alt="Six axes of realism" width="100%" />
+</p>
 
 Most public retail datasets are either tiny (Iris, Wine), tabular without behavior (Northwind), or behaviorally flat (uniform random orders). This one was designed from the ground up to be **statistically realistic** along the axes that matter for analytics work:
 
@@ -48,7 +59,7 @@ Most public retail datasets are either tiny (Iris, Wine), tabular without behavi
 
 ---
 
-## 📈 What you can do with the data
+## What you can do with the data
 
 The shipped sample (1,000 customers × 11 years, seed 42) supports every standard retail analysis out of the box:
 
@@ -89,24 +100,11 @@ The shipped sample (1,000 customers × 11 years, seed 42) supports every standar
 
 ---
 
-## 🗂 Schema (6 CSVs, fully relational)
+## Schema (6 CSVs, fully relational)
 
-```
-                ┌─────────────┐
-                │ promotions  │
-                └──────▲──────┘
-                       │ promotion_id
-                       │
-┌──────────┐   ┌───────┴────────┐    ┌──────────┐
-│ stores   │◄──┤ invoice_headers├───►│customers │
-└──────────┘   └───────▲────────┘    └──────────┘
-   store_id           │ invoice_id     customer_id
-                      │
-                ┌─────┴───────┐    ┌──────────┐
-                │ sales_lines ├───►│  items   │
-                └─────────────┘    └──────────┘
-                                    product_id
-```
+<p align="center">
+  <img src="docs/branding/schema.png" alt="Schema diagram — 4 dim + 2 fact tables with FK relationships" width="100%" />
+</p>
 
 | File | Type | Rows | Key fields |
 |---|---|---|---|
@@ -121,7 +119,7 @@ The header / line split mirrors AdventureWorks' `SalesOrderHeader / SalesOrderDe
 
 ---
 
-## 🚀 Try it in 30 seconds
+## Try it in 30 seconds
 
 ```bash
 git clone <this-repo>
@@ -150,7 +148,7 @@ df.merge(pd.read_csv("output_csv/sample/invoice_headers.csv"), on="invoice_id") 
 
 ---
 
-## 🌍 Multi-market support
+## Multi-market support
 
 ```bash
 # Middle East: Arabic-locale Faker, AED, 5% VAT, Mada/COD payments,
@@ -171,7 +169,7 @@ Override any individual setting with CLI flags (`--vat-rate`, `--currency`, `--a
 
 ---
 
-## 🧬 The customer behavior model
+## The customer behavior model
 
 Each customer is permanently assigned to one of 6 cohorts via `random.Random(seed ^ customer_id)` — meaning **the same customer always gets the same cohort across runs.** Each cohort comes with a full behavior preset:
 
@@ -201,7 +199,7 @@ So a `LOYAL_HEAVY` customer on Black Friday in their fourth year buys with `p �
 
 ---
 
-## 🛠 Architecture
+## Architecture
 
 ```
 src/
@@ -232,7 +230,7 @@ run.py                  CLI orchestrator
 
 ---
 
-## ✅ Verification
+## Verification
 
 `scripts/verify.py` exits non-zero on the first failure and runs:
 
@@ -263,7 +261,7 @@ ALL CHECKS PASSED
 
 ---
 
-## ⚙️ CLI reference
+## CLI reference
 
 <details>
 <summary><strong>All flags</strong> (click to expand)</summary>
@@ -313,7 +311,7 @@ Output
 
 ---
 
-## 📚 References
+## References
 
 This project draws design lessons from:
 
@@ -323,12 +321,12 @@ This project draws design lessons from:
 
 ---
 
-## 📜 License
+## License
 
 MIT. See [`LICENSE`](LICENSE).
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 All data produced by this project is **synthetic** and randomly generated. It does not contain real customer or company information.
