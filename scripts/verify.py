@@ -31,10 +31,11 @@ EXPECTED_COLUMNS = {
         "yearly_income", "num_children", "house_owner_flag", "education",
         "country", "region", "city", "postal_code",
         "cohort", "price_sensitivity", "brand_affinity", "market",
+        "acquisition_channel",
     ],
     "stores.csv": [
         "store_id", "store_name", "country", "region", "city",
-        "opened_date", "store_type",
+        "latitude", "longitude", "opened_date", "store_type",
     ],
     "promotions.csv": [
         "promotion_id", "name", "discount_pct", "category_scope",
@@ -50,6 +51,17 @@ EXPECTED_COLUMNS = {
         "line_id", "invoice_id", "product_id", "quantity", "unit_price",
         "discount_pct", "discount_amount", "extended_amount", "line_total",
         "unit_standard_cost", "line_cost", "gross_margin",
+    ],
+    "marketing_spend.csv": [
+        "month", "channel", "spend_amount", "currency", "market",
+    ],
+    "support_tickets.csv": [
+        "ticket_id", "customer_id", "invoice_id", "channel", "category",
+        "priority", "opened_at", "closed_at", "resolution_hours", "csat_score",
+    ],
+    "nps_surveys.csv": [
+        "survey_id", "customer_id", "sent_at", "response_at", "score",
+        "nps_category",
     ],
 }
 
@@ -80,6 +92,9 @@ def main(out_dir: str = "output_csv") -> int:
     promos = pd.read_csv(base / "promotions.csv")
     headers = pd.read_csv(base / "invoice_headers.csv", dtype={"reference_invoice_id": str, "promotion_id": str})
     lines = pd.read_csv(base / "sales_lines.csv")
+    marketing = pd.read_csv(base / "marketing_spend.csv")
+    tickets = pd.read_csv(base / "support_tickets.csv")
+    nps = pd.read_csv(base / "nps_surveys.csv")
 
     headers["reference_invoice_id"] = headers["reference_invoice_id"].fillna("")
     headers["promotion_id"] = headers["promotion_id"].fillna("")
@@ -91,6 +106,9 @@ def main(out_dir: str = "output_csv") -> int:
     assert_schema(promos, "promotions.csv")
     assert_schema(headers, "invoice_headers.csv")
     assert_schema(lines, "sales_lines.csv")
+    assert_schema(marketing, "marketing_spend.csv")
+    assert_schema(tickets, "support_tickets.csv")
+    assert_schema(nps, "nps_surveys.csv")
     print("  schema: OK")
 
     # --- column-level invariants ---
@@ -194,6 +212,49 @@ def main(out_dir: str = "output_csv") -> int:
     if (cohort_per_cust != 1).any():
         raise Fail("some customers have multiple cohort labels")
     print("  cohort stickiness: OK")
+
+    # --- new tables ---
+    cust_ids_set = set(customers["customer_id"].astype(int).tolist())
+
+    # Marketing: spend > 0, channels enumerated, FK on market
+    if (marketing["spend_amount"] <= 0).any():
+        raise Fail("marketing_spend.spend_amount has non-positive values")
+    valid_channels = {
+        "ORGANIC", "REFERRAL", "PAID_SEARCH", "PAID_SOCIAL", "EMAIL", "AFFILIATE",
+    }
+    if not set(marketing["channel"].unique()).issubset(valid_channels):
+        raise Fail(f"marketing_spend has unexpected channels: "
+                   f"{set(marketing['channel'].unique()) - valid_channels}")
+    print(f"  marketing rows: {len(marketing):,}")
+
+    # Support tickets
+    if not tickets.empty:
+        if not tickets["customer_id"].astype(int).isin(cust_ids_set).all():
+            raise Fail("support_tickets references unknown customer_id")
+        if not tickets["invoice_id"].astype(str).isin(inv_ids).all():
+            raise Fail("support_tickets references unknown invoice_id")
+        if not tickets["csat_score"].between(1, 5).all():
+            raise Fail("support_tickets csat_score outside [1, 5]")
+    print(f"  support tickets: {len(tickets):,}")
+
+    # NPS surveys
+    if not nps.empty:
+        if not nps["customer_id"].astype(int).isin(cust_ids_set).all():
+            raise Fail("nps_surveys references unknown customer_id")
+        scores_num = pd.to_numeric(nps["score"], errors="coerce")
+        responded_mask = scores_num.notna()
+        responded_scores = scores_num[responded_mask]
+        if not responded_scores.empty:
+            if not responded_scores.between(0, 10).all():
+                raise Fail("nps_surveys score outside [0, 10]")
+            valid_cats = {"Promoter", "Passive", "Detractor"}
+            responded_cats = nps.loc[responded_mask, "nps_category"].dropna()
+            if not set(responded_cats).issubset(valid_cats):
+                raise Fail(f"nps_surveys nps_category unexpected: "
+                           f"{set(responded_cats) - valid_cats}")
+        n_responded = int(responded_mask.sum())
+        print(f"  nps surveys: {len(nps):,}  "
+              f"({n_responded/max(len(nps),1)*100:.0f}% response rate)")
 
     print("ALL CHECKS PASSED")
     return 0

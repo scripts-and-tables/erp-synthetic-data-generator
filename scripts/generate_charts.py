@@ -358,6 +358,215 @@ def chart_top_products(d: dict, out: Path) -> None:
     plt.close(fig)
 
 
+def chart_acquisition_mix(d: dict, out: Path) -> None:
+    """Stacked area: customer acquisitions per quarter, by channel."""
+    c = d["customers"].copy()
+    c["q"] = c["created_at"].dt.to_period("Q").dt.to_timestamp()
+    pivot = c.pivot_table(index="q", columns="acquisition_channel",
+                          values="customer_id", aggfunc="count",
+                          fill_value=0)
+    # Order channels for visual logic: organic at bottom, paid at top
+    order = ["ORGANIC", "REFERRAL", "EMAIL", "PAID_SEARCH", "PAID_SOCIAL", "AFFILIATE"]
+    cols = [c for c in order if c in pivot.columns]
+    pivot = pivot[cols]
+    colors = ["#22c55e", "#34d399", "#3b82f6", "#f59e0b", "#f97316", "#a855f7"]
+
+    fig, ax = plt.subplots(figsize=(11, 4.5))
+    ax.stackplot(pivot.index, pivot.T.values, labels=cols,
+                 colors=colors[:len(cols)], alpha=0.85)
+    ax.set_title("Acquisition channel mix shifts over time — paid channels grow")
+    ax.set_xlabel("Quarter")
+    ax.set_ylabel("New customers acquired")
+    ax.legend(loc="upper left", fontsize=9, framealpha=0.9, ncol=3)
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    fig.tight_layout()
+    fig.savefig(out / "acquisition_mix.png")
+    plt.close(fig)
+
+
+def chart_marketing_efficiency(d: dict, out: Path) -> None:
+    """Marketing spend over time + monthly CAC line on a secondary axis."""
+    if "marketing" not in d:
+        return
+    spend = d["marketing"].copy()
+    spend["month"] = pd.to_datetime(spend["month"])
+    monthly_spend = spend.groupby("month")["spend_amount"].sum().reset_index()
+
+    customers = d["customers"].copy()
+    customers["month"] = customers["created_at"].dt.to_period("M").dt.to_timestamp()
+    monthly_acq = customers.groupby("month")["customer_id"].count().reset_index(
+        name="new_customers")
+
+    df = monthly_spend.merge(monthly_acq, on="month", how="left").fillna(0)
+    df["cac"] = df["spend_amount"] / df["new_customers"].replace(0, np.nan)
+
+    fig, ax = plt.subplots(figsize=(11, 4.5))
+    ax.bar(df["month"], df["spend_amount"] / 1000, width=20,
+           color=PALETTE["primary"], alpha=0.55, label="Marketing spend ($k)")
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Marketing spend ($ thousands)", color=PALETTE["primary"])
+    ax.tick_params(axis="y", labelcolor=PALETTE["primary"])
+    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+
+    ax2 = ax.twinx()
+    ax2.plot(df["month"], df["cac"], color=PALETTE["accent"], linewidth=1.5,
+             label="Customer Acquisition Cost ($)")
+    ax2.set_ylabel("CAC ($ per new customer)", color=PALETTE["accent"])
+    ax2.tick_params(axis="y", labelcolor=PALETTE["accent"])
+    ax2.grid(False)
+
+    ax.set_title("Marketing spend & customer acquisition cost over time")
+    fig.tight_layout()
+    fig.savefig(out / "marketing_efficiency.png")
+    plt.close(fig)
+
+
+def chart_nps_trend(d: dict, out: Path) -> None:
+    """Quarterly NPS score over time + distribution by category."""
+    if "nps" not in d or d["nps"].empty:
+        return
+    nps = d["nps"].copy()
+    # filter to responses only
+    nps["score"] = pd.to_numeric(nps["score"], errors="coerce")
+    responded = nps.dropna(subset=["score"]).copy()
+    if responded.empty:
+        return
+    responded["sent_at"] = pd.to_datetime(responded["sent_at"])
+    responded["q"] = responded["sent_at"].dt.to_period("Q").dt.to_timestamp()
+
+    # NPS score = % promoters - % detractors per quarter
+    def quarter_nps(g):
+        prom = (g["score"] >= 9).sum()
+        det = (g["score"] <= 6).sum()
+        n = len(g)
+        return (prom - det) / n * 100
+
+    nps_q = responded.groupby("q").apply(quarter_nps).reset_index(name="nps_score")
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
+
+    axes[0].plot(nps_q["q"], nps_q["nps_score"], color=PALETTE["primary"],
+                 linewidth=1.6, marker="o", markersize=4)
+    axes[0].fill_between(nps_q["q"], 0, nps_q["nps_score"],
+                         where=(nps_q["nps_score"] >= 0),
+                         color=PALETTE["good"], alpha=0.20, label="positive")
+    axes[0].fill_between(nps_q["q"], 0, nps_q["nps_score"],
+                         where=(nps_q["nps_score"] < 0),
+                         color=PALETTE["bad"], alpha=0.20, label="negative")
+    axes[0].axhline(0, color=PALETTE["muted"], linewidth=0.8)
+    axes[0].set_title("NPS score by quarter")
+    axes[0].set_xlabel("Quarter")
+    axes[0].set_ylabel("NPS = % promoters − % detractors")
+    axes[0].xaxis.set_major_locator(mdates.YearLocator())
+    axes[0].xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+
+    cat_counts = responded["nps_category"].value_counts().reindex(
+        ["Promoter", "Passive", "Detractor"], fill_value=0)
+    colors = [PALETTE["good"], PALETTE["muted"], PALETTE["bad"]]
+    bars = axes[1].bar(cat_counts.index, cat_counts.values, color=colors,
+                       alpha=0.85)
+    total = cat_counts.sum()
+    for b, v in zip(bars, cat_counts.values):
+        pct = v / max(total, 1) * 100
+        axes[1].text(b.get_x() + b.get_width() / 2, v,
+                     f"{v}\n({pct:.0f}%)", ha="center", va="bottom",
+                     fontsize=10, color=PALETTE["neutral"])
+    axes[1].set_title("Total NPS responses by category")
+    axes[1].set_ylabel("Responses")
+
+    fig.suptitle("Customer satisfaction signal", fontsize=13, fontweight="bold")
+    fig.tight_layout()
+    fig.savefig(out / "nps_trend.png")
+    plt.close(fig)
+
+
+def chart_support_volume(d: dict, out: Path) -> None:
+    """Support tickets by category + resolution-time distribution."""
+    if "tickets" not in d or d["tickets"].empty:
+        return
+    t = d["tickets"].copy()
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
+
+    by_cat = t["category"].value_counts().sort_values()
+    bars = axes[0].barh(by_cat.index, by_cat.values, color=PALETTE["primary"],
+                        alpha=0.85)
+    for b, v in zip(bars, by_cat.values):
+        axes[0].text(v + 0.5, b.get_y() + b.get_height() / 2, f"{v}",
+                     va="center", fontsize=9, color=PALETTE["neutral"])
+    axes[0].set_title("Support tickets by category")
+    axes[0].set_xlabel("Tickets")
+
+    res = pd.to_numeric(t["resolution_hours"], errors="coerce").dropna()
+    if not res.empty:
+        axes[1].hist(res.clip(upper=res.quantile(0.95)), bins=40,
+                     color=PALETTE["accent"], alpha=0.85, edgecolor="white",
+                     linewidth=0.5)
+        axes[1].axvline(res.median(), color=PALETTE["primary"],
+                        linestyle="--", linewidth=1.5,
+                        label=f"median {res.median():.1f}h")
+        axes[1].set_title("Resolution time distribution (hours, capped at 95th pct)")
+        axes[1].set_xlabel("Hours to resolve")
+        axes[1].set_ylabel("Tickets")
+        axes[1].legend(framealpha=0.9)
+
+    fig.suptitle("Customer support workload", fontsize=13, fontweight="bold")
+    fig.tight_layout()
+    fig.savefig(out / "support_volume.png")
+    plt.close(fig)
+
+
+def chart_store_map(d: dict, out: Path) -> None:
+    """Scatter store locations on a lat/lon plane, sized by total revenue."""
+    if "stores" not in d:
+        return
+    stores = d["stores"].copy()
+    # Filter physical stores (have lat/lon)
+    stores["latitude"] = pd.to_numeric(stores["latitude"], errors="coerce")
+    stores["longitude"] = pd.to_numeric(stores["longitude"], errors="coerce")
+    physical = stores.dropna(subset=["latitude", "longitude"])
+    if physical.empty:
+        return
+
+    # Revenue per store
+    headers = d["headers"][d["headers"].is_return == 0]
+    rev_by_store = headers.groupby("store_id")["grand_total"].sum().reset_index()
+    physical = physical.merge(rev_by_store, on="store_id", how="left").fillna(0)
+
+    fig, ax = plt.subplots(figsize=(11, 5.5))
+
+    # Bubble size proportional to revenue
+    max_rev = max(physical["grand_total"].max(), 1)
+    sizes = 80 + (physical["grand_total"] / max_rev) * 1500
+
+    type_color = {"Flagship": PALETTE["accent"], "Standard": PALETTE["primary"],
+                  "Kiosk": PALETTE["good"]}
+    colors = [type_color.get(t, PALETTE["muted"]) for t in physical["store_type"]]
+
+    ax.scatter(physical["longitude"], physical["latitude"], s=sizes,
+               c=colors, alpha=0.65, edgecolors="white", linewidths=1.5)
+
+    for _, row in physical.iterrows():
+        ax.annotate(row["city"], xy=(row["longitude"], row["latitude"]),
+                    xytext=(6, 6), textcoords="offset points",
+                    fontsize=9, color=PALETTE["neutral"])
+
+    ax.set_title("Stores by location and revenue (bubble = total revenue)")
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+
+    from matplotlib.patches import Patch
+    legend_handles = [Patch(facecolor=v, label=k, alpha=0.65)
+                      for k, v in type_color.items()
+                      if k in physical["store_type"].values]
+    ax.legend(handles=legend_handles, loc="lower left", framealpha=0.9, fontsize=9)
+    fig.tight_layout()
+    fig.savefig(out / "store_map.png")
+    plt.close(fig)
+
+
 def main(in_dir: str = "output_csv/sample",
          out_dir: str = "docs/charts") -> int:
     in_path = Path(in_dir)
@@ -366,6 +575,14 @@ def main(in_dir: str = "output_csv/sample",
 
     print(f"loading from {in_path}/")
     d = load(in_path)
+    # Optional new tables
+    for name, fname in [("marketing", "marketing_spend.csv"),
+                        ("tickets", "support_tickets.csv"),
+                        ("nps", "nps_surveys.csv")]:
+        path = in_path / fname
+        if path.exists():
+            d[name] = pd.read_csv(path)
+
     print(f"  customers={len(d['customers'])}  invoices={len(d['headers'])}  "
           f"lines={len(d['lines'])}")
 
@@ -378,6 +595,11 @@ def main(in_dir: str = "output_csv/sample",
     chart_signup_curve(d, out_path);        print("  ✓ signup_curve.png")
     chart_cohort_distribution(d, out_path); print("  ✓ cohort_distribution.png")
     chart_top_products(d, out_path);        print("  ✓ top_products.png")
+    chart_acquisition_mix(d, out_path);     print("  ✓ acquisition_mix.png")
+    chart_marketing_efficiency(d, out_path); print("  ✓ marketing_efficiency.png")
+    chart_nps_trend(d, out_path);           print("  ✓ nps_trend.png")
+    chart_support_volume(d, out_path);      print("  ✓ support_volume.png")
+    chart_store_map(d, out_path);           print("  ✓ store_map.png")
     print(f"all charts written to {out_path}/")
     return 0
 

@@ -149,11 +149,10 @@ def chart_hero(out: Path, sample_dir: Path) -> None:
 
 
 def chart_stats_strip(out: Path, sample_dir: Path) -> None:
-    """Horizontal strip of 6 'stat cards' with the dataset's headline numbers."""
+    """Horizontal strip of stat cards with the dataset's headline numbers."""
     headers = pd.read_csv(sample_dir / "invoice_headers.csv")
     lines = pd.read_csv(sample_dir / "sales_lines.csv")
     customers = pd.read_csv(sample_dir / "customers.csv")
-    items = pd.read_csv(sample_dir / "items.csv")
 
     pos = headers[headers.is_return == 0]
     neg = headers[headers.is_return == 1]
@@ -161,39 +160,49 @@ def chart_stats_strip(out: Path, sample_dir: Path) -> None:
     margin = (pos.merge(lines, on="invoice_id")["gross_margin"].sum() /
               pos.merge(lines, on="invoice_id")["line_total"].sum() * 100)
 
+    # Optional new tables
+    n_tickets = 0
+    n_nps = 0
+    spend_total = 0.0
+    if (sample_dir / "support_tickets.csv").exists():
+        n_tickets = len(pd.read_csv(sample_dir / "support_tickets.csv"))
+    if (sample_dir / "nps_surveys.csv").exists():
+        n_nps = len(pd.read_csv(sample_dir / "nps_surveys.csv"))
+    if (sample_dir / "marketing_spend.csv").exists():
+        spend_total = pd.read_csv(sample_dir / "marketing_spend.csv")["spend_amount"].sum()
+
     stats = [
         (f"{len(customers):,}", "customers", BRAND["primary"]),
         (f"{len(pos):,}", "invoices", BRAND["primary_2"]),
         (f"{len(lines):,}", "sales lines", BRAND["accent"]),
         (f"${rev/1e6:.1f}M", "gross revenue", BRAND["accent_2"]),
         (f"{margin:.0f}%", "gross margin", BRAND["good"]),
-        (f"{len(neg)/len(pos)*100:.1f}%", "returns share", BRAND["bad"]),
+        (f"{n_tickets:,}", "support tickets", "#0ea5e9"),
+        (f"{n_nps:,}", "NPS surveys", "#ec4899"),
+        (f"${spend_total/1e3:.0f}k", "marketing spend", "#a855f7"),
     ]
 
-    fig, ax = plt.subplots(figsize=(14, 2.0))
+    n_cards = len(stats)
+    fig, ax = plt.subplots(figsize=(16, 2.0))
     fig.patch.set_facecolor(BRAND["bg_top"])
     ax.set_facecolor(BRAND["bg_top"])
-    ax.set_xlim(0, 6)
+    ax.set_xlim(0, n_cards)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
     for i, (val, label, color) in enumerate(stats):
-        # Card background
         card = FancyBboxPatch((i + 0.07, 0.10), 0.86, 0.80,
                               boxstyle="round,pad=0.02,rounding_size=0.04",
                               facecolor=BRAND["card_bg"],
                               edgecolor=BRAND["card_border"], linewidth=1)
         ax.add_patch(card)
-        # Accent stripe
         stripe = FancyBboxPatch((i + 0.07, 0.10), 0.04, 0.80,
                                 boxstyle="round,pad=0,rounding_size=0.02",
                                 facecolor=color, edgecolor="none")
         ax.add_patch(stripe)
-        # Big value
-        ax.text(i + 0.5, 0.62, val, fontsize=22, fontweight="bold",
+        ax.text(i + 0.5, 0.62, val, fontsize=18, fontweight="bold",
                 color=BRAND["text"], ha="center", va="center")
-        # Label
-        ax.text(i + 0.5, 0.30, label, fontsize=11,
+        ax.text(i + 0.5, 0.30, label, fontsize=10,
                 color=BRAND["text_dim"], ha="center", va="center")
 
     fig.savefig(out / "stats_strip.png", facecolor=BRAND["bg_top"])
@@ -201,26 +210,12 @@ def chart_stats_strip(out: Path, sample_dir: Path) -> None:
 
 
 def chart_schema(out: Path) -> None:
-    """Entity-relationship diagram of the 6 CSVs.
-
-    Layout:
-      ┌──────────┐  ┌──────────────┐  ┌──────────┐
-      │  items   │  │  promotions  │  │ stores   │  (DIM)
-      └────┬─────┘  └──────┬───────┘  └────┬─────┘
-           │               │               │
-           │       ┌───────▼────────┐      │
-           │       │ invoice_headers│◄─────┘     (FACT)
-           │       └───────┬────────┘
-           │               │
-           │       ┌───────▼────────┐  ┌──────────┐
-           └──────►│  sales_lines   │  │customers │  (FACT/DIM)
-                   └────────────────┘  └──────────┘
-    """
-    fig, ax = plt.subplots(figsize=(15, 9))
+    """Entity-relationship diagram of all 9 CSVs."""
+    fig, ax = plt.subplots(figsize=(17, 10))
     fig.patch.set_facecolor(BRAND["bg_top"])
     ax.set_facecolor(BRAND["bg_top"])
-    ax.set_xlim(0, 15)
-    ax.set_ylim(0, 9)
+    ax.set_xlim(0, 17)
+    ax.set_ylim(0, 10)
     ax.axis("off")
 
     BOX_W = 3.4
@@ -236,9 +231,9 @@ def chart_schema(out: Path) -> None:
                                 facecolor=color, edgecolor="none",
                                 alpha=0.92, zorder=3)
         ax.add_patch(header)
-        ax.text(x + 0.20, y + h - 0.27, title, fontsize=13, fontweight="bold",
+        ax.text(x + 0.20, y + h - 0.27, title, fontsize=12, fontweight="bold",
                 color="#0b1220", ha="left", va="center", zorder=4)
-        ax.text(x + BOX_W - 0.20, y + h - 0.27, badge, fontsize=8.5,
+        ax.text(x + BOX_W - 0.20, y + h - 0.27, badge, fontsize=8,
                 fontweight="bold", color="#0b1220", ha="right", va="center",
                 zorder=4,
                 bbox=dict(boxstyle="round,pad=0.25", facecolor="white",
@@ -246,68 +241,91 @@ def chart_schema(out: Path) -> None:
         for j, (fname, ftype) in enumerate(fields):
             yj = y + h - 0.95 - j * 0.32
             ax.text(x + 0.20, yj, fname,
-                    fontsize=10, color=BRAND["text"], family="monospace",
+                    fontsize=9.5, color=BRAND["text"], family="monospace",
                     ha="left", va="center", zorder=4)
             ax.text(x + BOX_W - 0.20, yj, ftype,
-                    fontsize=9, color=BRAND["text_dim"], family="monospace",
+                    fontsize=8.5, color=BRAND["text_dim"], family="monospace",
                     ha="right", va="center", zorder=4)
 
-    # Coordinates: 3 columns x 3 rows
-    # x columns: 0.5 / 5.8 / 11.1
-    COL_L = 0.5
-    COL_M = 5.8
-    COL_R = 11.1
+    # 4 columns: L, ML, MR, R
+    COL_L  = 0.3
+    COL_ML = 4.5
+    COL_MR = 8.7
+    COL_R  = 13.0
 
-    # Top row: 3 DIM tables
-    box(COL_L, 6.6, 2.0, "items", [
+    # Top row (y=7.6): items, promotions, stores, marketing_spend
+    box(COL_L, 7.6, 2.0, "items", [
         ("product_id", "PK"),
         ("subcategory", "str"),
         ("list_price", "money"),
         ("standard_cost", "money"),
     ], BRAND["primary"], "DIM")
 
-    box(COL_M, 6.6, 2.0, "promotions", [
+    box(COL_ML, 7.6, 2.0, "promotions", [
         ("promotion_id", "PK"),
         ("discount_pct", "float"),
-        ("category_scope", "str"),
         ("start_date / end_date", "date"),
     ], BRAND["accent_2"], "DIM")
 
-    box(COL_R, 6.6, 2.0, "stores", [
+    box(COL_MR, 7.6, 2.0, "stores", [
         ("store_id", "PK"),
-        ("country / region", "str"),
-        ("city", "str"),
+        ("city / latitude / longitude", "geo"),
         ("store_type", "enum"),
     ], BRAND["primary_2"], "DIM")
 
-    # Middle row: invoice_headers (the central fact)
-    box(COL_M, 3.5, 2.4, "invoice_headers", [
+    box(COL_R, 7.6, 2.0, "marketing_spend", [
+        ("month", "date"),
+        ("channel", "enum"),
+        ("spend_amount", "money"),
+    ], "#a855f7", "DIM")
+
+    # Middle row (y=4.4): invoice_headers central, support_tickets right
+    box(COL_ML + 0.3, 4.4, 2.6, "invoice_headers", [
         ("invoice_id", "PK"),
         ("customer_id", "FK"),
-        ("store_id", "FK"),
-        ("promotion_id", "FK"),
-        ("grand_total / tax / freight", "money"),
-        ("is_return / reference_invoice_id", "0/1"),
+        ("store_id / promotion_id", "FK"),
+        ("subtotal / tax / freight", "money"),
+        ("grand_total", "money"),
+        ("is_return / reference", "0/1"),
     ], BRAND["accent"], "FACT")
 
-    # Bottom row
-    box(COL_M, 0.4, 2.2, "sales_lines", [
+    box(COL_R, 4.4, 2.6, "support_tickets", [
+        ("ticket_id", "PK"),
+        ("customer_id", "FK"),
+        ("invoice_id", "FK"),
+        ("category / priority", "enum"),
+        ("resolution_hours", "float"),
+        ("csat_score", "1-5"),
+    ], "#0ea5e9", "FACT")
+
+    # Bottom row (y=1.0): sales_lines, customers, nps_surveys
+    box(COL_L + 0.5, 1.0, 2.6, "sales_lines", [
         ("line_id", "PK"),
         ("invoice_id", "FK"),
         ("product_id", "FK"),
-        ("quantity / unit_price", "n / money"),
-        ("line_total / gross_margin", "money"),
+        ("quantity / unit_price", "n/money"),
+        ("line_total", "money"),
+        ("gross_margin", "money"),
     ], BRAND["bad"], "FACT")
 
-    box(COL_R, 0.4, 2.2, "customers", [
+    box(COL_MR - 0.4, 1.0, 2.6, "customers", [
         ("customer_id", "PK"),
         ("cohort", "str"),
+        ("acquisition_channel", "enum"),
         ("price_sensitivity", "float"),
-        ("yearly_income / country", "int / str"),
         ("demographics + geo", "..."),
+        ("yearly_income / country", "int/str"),
     ], BRAND["good"], "DIM")
 
-    # Arrows: anchor on box edges, label offset clearly
+    box(COL_R, 1.0, 2.6, "nps_surveys", [
+        ("survey_id", "PK"),
+        ("customer_id", "FK"),
+        ("sent_at / response_at", "date"),
+        ("score", "0-10"),
+        ("nps_category", "enum"),
+    ], "#ec4899", "FACT")
+
+    # Arrows
     def arrow(x1, y1, x2, y2, label=None, label_x_off=0.0, label_y_off=0.20,
               rad=0.05):
         a = FancyArrowPatch((x1, y1), (x2, y2),
@@ -319,58 +337,70 @@ def chart_schema(out: Path) -> None:
         if label:
             mx = (x1 + x2) / 2 + label_x_off
             my = (y1 + y2) / 2 + label_y_off
-            ax.text(mx, my, label, fontsize=9.5,
+            ax.text(mx, my, label, fontsize=9,
                     color=BRAND["text"], ha="center", va="center",
                     family="monospace", zorder=5,
-                    bbox=dict(boxstyle="round,pad=0.30",
+                    bbox=dict(boxstyle="round,pad=0.25",
                               facecolor=BRAND["bg_top"],
                               edgecolor=BRAND["card_border"],
                               linewidth=0.8))
 
-    # Edge anchor helpers
-    def bottom(col_x, y_top): return (col_x + BOX_W / 2, y_top)
-    def top(col_x, y_bot):    return (col_x + BOX_W / 2, y_bot)
-    def left(col_x, y_mid):   return (col_x, y_mid)
-    def right(col_x, y_mid):  return (col_x + BOX_W, y_mid)
+    HC_X = COL_ML + 0.3 + BOX_W / 2  # invoice_headers center x
+    HC_TOP = 4.4 + 2.6
+    HC_BOT = 4.4
+    HC_L = COL_ML + 0.3
+    HC_R = COL_ML + 0.3 + BOX_W
 
-    # 1. promotions  →  invoice_headers (vertical)
-    x1, y1 = bottom(COL_M, 6.6)
-    x2, y2 = top(COL_M, 5.9)
-    arrow(x1, y1, x2, y2, "promotion_id", label_x_off=1.4)
+    # 1. promotions → invoice_headers (vertical short)
+    arrow(COL_ML + BOX_W / 2, 7.6, HC_X - 0.5, HC_TOP, "promotion_id",
+          label_x_off=1.0, label_y_off=0.00)
 
-    # 2. items  →  sales_lines (long diagonal across)
-    x1, y1 = bottom(COL_L, 6.6)
-    x2, y2 = left(COL_M, 1.5)
-    arrow(x1, y1, x2, y2, "product_id", label_x_off=-0.05, label_y_off=0.15, rad=-0.18)
+    # 2. stores → invoice_headers (down + left)
+    arrow(COL_MR + BOX_W / 2, 7.6, HC_X + 0.5, HC_TOP, "store_id",
+          label_x_off=0.5, label_y_off=0.00, rad=-0.10)
 
-    # 3. stores  →  invoice_headers
-    x1, y1 = bottom(COL_R, 6.6)
-    x2, y2 = right(COL_M, 4.7)
-    arrow(x1, y1, x2, y2, "store_id", label_x_off=0.9, label_y_off=0.0, rad=-0.20)
+    # 3. items → sales_lines (long diagonal)
+    SL_X = COL_L + 0.5 + BOX_W / 2
+    arrow(COL_L + BOX_W, 7.6, SL_X, 1.0 + 2.6, "product_id",
+          label_x_off=0.4, label_y_off=0.00, rad=-0.15)
 
-    # 4. customers  →  invoice_headers
-    x1, y1 = top(COL_R, 0.4 + 2.2)
-    x2, y2 = right(COL_M, 4.0)
-    arrow(x1, y1, x2, y2, "customer_id", label_x_off=0.9, label_y_off=0.0, rad=0.20)
+    # 4. invoice_headers → sales_lines
+    arrow(HC_L + 0.4, HC_BOT, SL_X + 0.6, 1.0 + 2.6, "invoice_id",
+          label_x_off=-0.4, label_y_off=0.00, rad=-0.10)
 
-    # 5. invoice_headers  →  sales_lines (vertical)
-    x1, y1 = bottom(COL_M, 3.5)
-    x2, y2 = top(COL_M, 0.4 + 2.2)
-    arrow(x1, y1, x2, y2, "invoice_id", label_x_off=1.4)
+    # 5. customers → invoice_headers
+    CC_X = COL_MR - 0.4 + BOX_W / 2
+    arrow(CC_X, 1.0 + 2.6, HC_R - 0.4, HC_BOT, "customer_id",
+          label_x_off=0.4, label_y_off=0.00, rad=0.10)
+
+    # 6. invoice_headers → support_tickets
+    arrow(HC_R, HC_BOT + 1.5, COL_R, 4.4 + 1.5, "invoice_id",
+          label_x_off=0.0, label_y_off=0.20, rad=0.0)
+
+    # 7. customers → support_tickets
+    ST_BOT = 4.4
+    ST_X = COL_R + BOX_W / 2
+    arrow(CC_X + 0.4, 1.0 + 2.6, ST_X - 0.4, ST_BOT, "customer_id",
+          label_x_off=1.2, label_y_off=0.00, rad=0.20)
+
+    # 8. customers → nps_surveys
+    NPS_X = COL_R + BOX_W / 2
+    arrow(CC_X + 0.6, 1.0 + 1.5, COL_R, 1.0 + 1.5, "customer_id",
+          label_x_off=0.0, label_y_off=0.25, rad=0.0)
 
     # Title
-    ax.text(7.5, 8.85, "Schema — 4 dimensions + 2 facts, fully relational",
+    ax.text(8.5, 9.85, "Schema — 5 dimensions + 4 facts, fully relational",
             fontsize=15, fontweight="bold", color=BRAND["text"],
             ha="center", va="bottom")
 
     # Legend
     legend_items = [(BRAND["primary"], "DIM"), (BRAND["accent"], "FACT")]
-    lx = 13.4
+    lx = 15.6
     for i, (color, label) in enumerate(legend_items):
-        circle = patches.Circle((lx, 8.55 - i * 0.35), 0.10,
+        circle = patches.Circle((lx, 9.5 - i * 0.35), 0.10,
                                 facecolor=color, edgecolor="none")
         ax.add_patch(circle)
-        ax.text(lx + 0.20, 8.55 - i * 0.35, label, fontsize=10,
+        ax.text(lx + 0.20, 9.5 - i * 0.35, label, fontsize=10,
                 color=BRAND["text_dim"], va="center")
 
     fig.savefig(out / "schema.png", facecolor=BRAND["bg_top"])
@@ -378,8 +408,7 @@ def chart_schema(out: Path) -> None:
 
 
 def chart_features(out: Path) -> None:
-    """3x3 grid of feature highlight cards."""
-    # Use Unicode geometric shapes that DejaVu Sans supports (no emoji)
+    """4x2 grid of feature highlight cards."""
     features = [
         ("$", "Realistic pricing\n& margins",
          "list_price · standard_cost · multi-year inflation",
@@ -399,9 +428,15 @@ def chart_features(out: Path) -> None:
         ("⟲", "Reproducibility",
          "single --seed → byte-identical output",
          BRAND["bad"]),
+        ("→", "Acquisition & CAC",
+         "channel mix shifts over time · monthly marketing spend",
+         "#a855f7"),
+        ("◈", "Voice of customer",
+         "support tickets with CSAT · quarterly NPS surveys",
+         "#0ea5e9"),
     ]
 
-    fig, axes = plt.subplots(2, 3, figsize=(14, 5))
+    fig, axes = plt.subplots(2, 4, figsize=(17, 5))
     fig.patch.set_facecolor(BRAND["bg_top"])
 
     for ax, (icon, title, desc, color) in zip(axes.flat, features):
@@ -435,7 +470,7 @@ def chart_features(out: Path) -> None:
         ax.text(0.10, 0.26, desc, fontsize=10, color=BRAND["text_dim"],
                 ha="left", va="center", linespacing=1.4)
 
-    fig.suptitle("Six axes of realism", fontsize=15, fontweight="bold",
+    fig.suptitle("Eight axes of realism", fontsize=15, fontweight="bold",
                  color=BRAND["text"], y=1.02)
     fig.tight_layout()
     fig.savefig(out / "features.png", facecolor=BRAND["bg_top"])

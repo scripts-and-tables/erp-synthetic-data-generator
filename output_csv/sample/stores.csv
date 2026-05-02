@@ -1,9 +1,9 @@
-store_id,store_name,country,region,city,opened_date,store_type
-101,US-STA-001 Dallas,US,TX,Dallas,2018-03-26,Standard
-102,US-KIO-002 New York,US,NY,New York,2015-01-04,Kiosk
-103,US-KIO-003 Dallas,US,TX,Dallas,2019-02-28,Kiosk
-104,US-STA-004 Houston,US,TX,Houston,2015-05-24,Standard
-105,US-STA-005 Philadelphia,US,PA,Philadelphia,2018-09-20,Standard
-106,US-ONL-006 Boston,US,MA,Boston,2017-11-04,Online
-107,US-STA-007 San Antonio,US,TX,San Antonio,2018-11-28,Standard
-108,US-STA-008 Chicago,US,IL,Chicago,2018-09-23,Standard
+store_id,store_name,country,region,city,latitude,longitude,opened_date,store_type
+101,US-STA-001 Dallas,US,TX,Dallas,32.7457,-96.8426,2018-03-26,Standard
+102,US-ONL-002 Dallas,US,TX,Dallas,,,2018-01-07,Online
+103,US-KIO-003 Boston,US,MA,Boston,42.3465,-71.1019,2016-02-08,Kiosk
+104,US-STA-004 Philadelphia,US,PA,Philadelphia,39.9874,-75.1432,2018-09-20,Standard
+105,US-KIO-005 Phoenix,US,AZ,Phoenix,33.4386,-112.0944,2016-10-30,Kiosk
+106,US-KIO-006 San Antonio,US,TX,San Antonio,29.4418,-98.4533,2017-02-15,Kiosk
+107,US-STA-007 Phoenix,US,AZ,Phoenix,33.3984,-112.0953,2019-09-04,Standard
+108,US-STA-008 Austin,US,TX,Austin,30.2637,-97.7489,2016-10-21,Standard

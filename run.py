@@ -1,4 +1,5 @@
-"""CLI orchestrator: items + customers + stores + promotions + invoice headers + lines."""
+"""CLI orchestrator: items + customers + stores + promotions + invoice headers
++ lines + marketing spend + support tickets + NPS surveys."""
 from __future__ import annotations
 
 import argparse
@@ -10,11 +11,13 @@ import pandas as pd
 from src.cohorts import assign_cohort
 from src.customers import generate_customers_df
 from src.items import build_items_universe_df, sample_items_dataset_df
+from src.marketing import build_marketing_spend_df
 from src.markets import MARKETS, get_market
 from src.promotions import build_promotions_df, build_promo_lookup
 from src.rng_utils import make_rngs
 from src.sales import generate_customer_sales
 from src.stores import build_stores_df
+from src.support import build_nps_surveys_df, build_support_tickets_df
 
 
 def parse_args() -> argparse.Namespace:
@@ -237,6 +240,32 @@ def main() -> None:
             "discount_pct", "discount_amount", "extended_amount", "line_total",
             "unit_standard_cost", "line_cost", "gross_margin",
         ]).to_csv(lines_path, index=False)
+
+    # 6) Marketing spend (independent of sales — purely calendar-driven)
+    print("  building marketing spend...")
+    df_marketing = build_marketing_spend_df(
+        date_from=date_from, date_till=date_till,
+        market_cfg=market_cfg, rngs=rngs,
+    )
+    df_marketing.to_csv(out_dir / "marketing_spend.csv", index=False)
+
+    # 7) Support tickets and NPS surveys (need invoice headers as input)
+    print("  building support tickets and NPS surveys...")
+    df_headers = pd.read_csv(headers_path)
+    from random import Random
+    support_rng = Random((rngs.seed * 2654435761) ^ 0xC0FFEE)
+    df_tickets = build_support_tickets_df(
+        customers_df=df_customers, headers_df=df_headers,
+        rng=support_rng, date_till=date_till,
+    )
+    df_tickets.to_csv(out_dir / "support_tickets.csv", index=False)
+
+    nps_rng = Random((rngs.seed * 2654435761) ^ 0xBADF00D)
+    df_nps = build_nps_surveys_df(
+        customers_df=df_customers, headers_df=df_headers,
+        rng=nps_rng, date_from=date_from, date_till=date_till,
+    )
+    df_nps.to_csv(out_dir / "nps_surveys.csv", index=False)
 
     print("data generation - completed")
 

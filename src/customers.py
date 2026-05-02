@@ -33,6 +33,26 @@ _MARITAL = [("Single", 0.45), ("Married", 0.45), ("Divorced", 0.10)]
 _GENDER = [("M", 0.50), ("F", 0.50)]
 
 
+# Acquisition channel weights *evolve over time* — early years are organic-heavy,
+# later years are paid-social-heavy. Year-0 = first signup year of the run.
+def _channel_weights_for_year_idx(y_idx: int) -> list[tuple[str, float]]:
+    # Linearly tilt mix from early/organic to late/paid as years progress, capped at year 8.
+    t = min(max(y_idx, 0), 8) / 8.0  # 0..1
+    return [
+        ("ORGANIC",      0.50 - 0.30 * t),  # 0.50 → 0.20
+        ("REFERRAL",     0.18 - 0.06 * t),  # 0.18 → 0.12
+        ("PAID_SEARCH",  0.10 + 0.05 * t),  # 0.10 → 0.15
+        ("PAID_SOCIAL",  0.08 + 0.22 * t),  # 0.08 → 0.30
+        ("EMAIL",        0.08 + 0.04 * t),  # 0.08 → 0.12
+        ("AFFILIATE",    0.06 + 0.05 * t),  # 0.06 → 0.11
+    ]
+
+
+ACQUISITION_CHANNELS = [
+    "ORGANIC", "REFERRAL", "PAID_SEARCH", "PAID_SOCIAL", "EMAIL", "AFFILIATE",
+]
+
+
 def _weighted_pick(rng: np.random.Generator, weights: list[tuple[str, float]]) -> str:
     labels = [w[0] for w in weights]
     probs = np.array([w[1] for w in weights], dtype=float)
@@ -218,6 +238,22 @@ def generate_customers_df(
     df["price_sensitivity"] = sensitivities
     df["brand_affinity"] = affinities
     df["market"] = market_cfg["key"]
+
+    # Acquisition channel — sampled per signup year so the mix shifts over time.
+    df["_signup_year"] = pd.to_datetime(df["created_at"]).dt.year
+    first_year = int(df["_signup_year"].min())
+    channels = np.empty(len(df), dtype=object)
+    for y, sub in df.groupby("_signup_year"):
+        weights = _channel_weights_for_year_idx(int(y) - first_year)
+        labels = [w[0] for w in weights]
+        probs = np.array([w[1] for w in weights], dtype=float)
+        probs = probs / probs.sum()
+        idx = sub.index.values
+        picks = rng_np.choice(len(labels), p=probs, size=len(idx))
+        for ix, p in zip(idx, picks):
+            channels[ix] = labels[p]
+    df["acquisition_channel"] = channels
+    df = df.drop(columns=["_signup_year"])
 
     return df
 
